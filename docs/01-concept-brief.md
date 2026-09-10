@@ -5,102 +5,91 @@
 
 ## Working title
 
-**Front Desk** — an AI receptionist that answers missed calls and texts for a
-service business and turns them into booked jobs. (Name can change.)
+**Palmm OS** — a backend system that runs the whole business. (Name can change;
+"The Pitch" is on the table too.)
 
 ## One sentence
 
-A text-first AI receptionist for the owner-operator of a one-location auto
-detailing shop, so missed calls and after-hours messages get answered in under
-a minute and become booked appointments instead of lost jobs.
+A single backend system that manages all the moving parts of my
+consulting/marketing business — and the daily life around it — so my partner and
+I run everything from one place instead of a pile of spreadsheets and task apps.
 
 ## Who it's for
 
-Not "small businesses." One person: the owner-operator of a single-location
-auto detailing shop — think Grand Prix Auto Spa — who does most of the
-detailing himself with one or two helpers. When a lead comes in he is usually
-under a car with wet hands, wearing gloves, or running a buffer, so he can't
-pick up. He lives on his phone between jobs and will glance at a simple
-dashboard, but he is not going to sit at a computer. His callers are
-high-intent and impatient: they book whichever shop answers first.
+Me and my business partner — the two people actually operating the business. We
+juggle client work, deadlines, follow-ups, money, and personal to-dos across too
+many tools, usually from a laptop but often from a phone between meetings. We're
+power users: we'd rather configure something once and have it run than click
+through a generic app every day.
 
-If the honest first user is "a business I already work with through Palmm," that
-is exactly the point — I have real access to this person and can watch them use
-it, rather than inventing an audience.
+The honest first user is us. That's the point — we live inside this problem every
+day, so we'll know immediately whether it actually saves us time.
 
 ## The job it does
 
-When a call or text comes in while I'm mid-detail and can't answer, I want it
-answered right away with real answers about services, price ranges, and
-availability, and turned into a booked appointment, so I can stop losing jobs to
-whichever competitor picked up the phone first.
+When I have tasks due for the business, I want to get them done the most
+efficient way possible, so I can make money and feel satisfied that nothing is
+slipping.
 
 ## Current workaround
 
-Voicemail that nobody listens to, a spouse or helper answering when they can, or
-texting people back hours later once the lead has already gone cold. A few shops
-pay for a generic answering service, but it doesn't know their pricing, their
-services, or what times are actually open, so it just takes a message — which is
-the same problem with extra steps. "Nothing" isn't the alternative; losing the
-lead is.
+Spreadsheets and a general task manager, stitched together by hand. Things live
+in different places — a sheet here, a task app there, a note somewhere else — so
+staying on top of it is its own job, and things still fall through the cracks.
 
 ## Why this, why now
 
-Two things are newly true: LLMs are now cheap and good enough to hold a real
-booking conversation, and Twilio + a calendar make the plumbing a solo build.
-Just as important, this is the core of what Palmm already does for service SMBs,
-so I have live users and real phone/booking data to test against instead of
-guesses.
+I already run the business, so I'm not guessing at the problem — I feel it daily
+and can test against real work. And the tooling finally makes a custom internal
+system realistic to build solo: AI coding in Cursor, LLMs to handle the fuzzy
+parts, and APIs/automation to wire the moving pieces together.
 
 ## In scope
 
-MVP, text-first (SMS):
+MVP — start with the core loop, not "everything at once":
 
-- Auto-respond to inbound texts within seconds.
-- Answer common questions from a shop profile: services offered, price ranges,
-  hours, location.
-- Collect the essentials of a job — vehicle, service wanted, preferred time.
-- Book into a calendar and confirm the appointment by text.
-- Notify the owner and show a simple dashboard of conversations and bookings,
-  with an obvious empty state and an error state when a booking can't complete.
+- One place that collects tasks and deadlines from the business.
+- Prioritizes what to do next so the most valuable/urgent work surfaces first.
+- Lets my partner and me capture, assign, and complete tasks.
+- Connects to a first set of tools we already use (start with one or two APIs,
+  prove the pattern, then expand).
+- Has a clear empty state and an error state for when a connected tool or API
+  fails.
 
 ## Out of scope
 
-- Live voice-call handling (start with SMS; voice is a later bet).
-- Outbound marketing / drip campaigns.
-- Payments and deposits (maybe a later milestone, not the MVP).
-- A full CRM, multi-location support, and review management.
+- "Manages literally every aspect" on day one — that's the vision, not the MVP.
+- Selling it to other businesses (this is for us first).
+- Deep automations for tools we haven't connected yet.
+- Anything that needs an API we can't actually get access to.
 
 ## What success looks like
 
-A two-week pilot with one real detailing shop where:
-
-- 90%+ of inbound texts get a useful reply within one minute, and
-- at least a handful of appointments get booked without the owner touching his
-  phone, and
-- the owner says he'd keep it running after the pilot.
-
-Rough is fine; the bar is "it booked a real job on its own," not "it's polished."
+My partner and I run a full week out of this system without falling back to the
+spreadsheet — tasks come in, get prioritized, and get done, and at the end of the
+week nothing important slipped. If we'd rather open this than our old sheet, it's
+working.
 
 ## Risks
 
-The biggest unknown: whether customers will actually finish a booking over text
-with an AI, or whether enough of them insist on calling and talking to a person
-that the whole premise leaks. Close behind: whether I can get availability and
-pricing structured cleanly enough that the AI answers reliably instead of making
-things up — a wrong price or a double-booked slot burns trust fast.
+Biggest unknown: whether one system can really manage *every* aspect of the
+business and daily life. That mostly comes down to access — I'm counting on
+being able to get the APIs for the tools I'd need to connect, and if some of
+those are closed or limited, parts of the vision won't be reachable. Scoping
+that down to what's actually connectable is the first real risk.
 
 ## Stack guess
 
-Likely Next.js / React / Tailwind, Supabase (data + auth), Twilio (SMS), an LLM
-API for the conversation, deployed on Vercel. This is a guess — Week 7 teaches
-stack selection and CP-M3 is where it's actually decided.
+Built with **Cursor** (AI coding), on my usual stack: Next.js / React / Tailwind
+for the interface, Supabase for data and auth, n8n for automations between tools,
+deployed on Vercel. This is a guess — Week 7 teaches stack selection and CP-M3
+is where it's decided.
 
 ## Open questions
 
-- SMS-only for the MVP, or is a missed-call-to-text auto-reply the true wedge?
-- Which calendar is the source of truth (Google Calendar, or something built in)?
-- How much should the AI quote on price vs. hand a hot lead straight to the owner?
+- Which tool/API do we connect first to get the fastest real payoff?
+- Is the core unit a "task," or a "workflow" that spans several tools?
+- How much should the system decide for us (auto-prioritize) vs. just show us?
 
 ## Next
 
