@@ -1,0 +1,4 @@
+{
+  "name": "Capstone",
+  "install": "python3 .cursor/check-docs.py"
+}
