@@ -5,96 +5,114 @@
 
 ## Working title
 
-Studio OS — the operating system for a boutique studio. (Working name; niche still tightening.)
+PetPro OS — the booking-and-retention operating system for independent dog trainers and
+groomers. (Working name; open to change.)
 
 ## One sentence
 
-A booking-and-retention system for the owner of a single-location boutique studio, so their
-schedule fills itself and clients come back — without hiring a front desk — and it's a real
-product I can sell through Meta ads.
+A simple, flat-priced software system that lets an independent dog trainer or groomer take
+bookings, cut no-shows, and keep clients rebooking — without a front desk — and it's a real
+product I can sell to those owners through Meta ads.
 
 ## Who it's for
 
-The owner-operator of a single-location boutique studio — think pilates, yoga, lash/brow,
-or a small med-spa: one to a few staff, the owner often delivering the service themselves.
-They're on their phone between clients, they book people manually over DM and text, and they
-lose money to no-shows and empty last-minute slots. This is the CUSTOMER, not me — the whole
-point is that it's sellable to people like them.
+The independent, owner-operator pet pro: a solo (or 2–4 person) dog trainer and/or groomer who
+does the work themselves, runs the business from their phone, and books clients over calls,
+DMs, and a paper book or spreadsheet. This is the CUSTOMER I sell to — not the pet owner.
 
-‹Tightest open decision: pick the exact first niche. Everything downstream sharpens once it's
-one specific type of studio.›
+Two closely related buyers, one job:
+- Dog trainers — private/in-home lessons, packages, board-and-train. Software here is wide
+  open; most duct-tape Acuity + Square + a spreadsheet.
+- Groomers — recurring full grooms every 4–8 weeks. Served by heavy tools (MoeGo) that solo
+  operators find too complex and too expensive (per-van pricing, metered texts).
 
 ## The job it does
 
-When my day is packed with clients and admin, I want bookings, reminders, and review requests
-to run themselves, so I can keep my schedule full and my clients coming back without paying
-for a front desk.
+When my day is full of dogs and I can't stop to handle admin, I want bookings, reminders, and
+rebookings to run themselves, so I can keep my schedule full and my clients coming back without
+hiring help.
 
 ## The problem
 
-Boutique owners run the business from their phone between sessions. Booking is manual (DMs,
-texts, a paper book), no-shows and unfilled cancellations quietly bleed revenue, and reviews
-and rebookings only happen when the owner remembers to ask. There's no single place that runs
-the operational loop.
+Independent pet pros run on scattered tools — calls, DMs, Google Calendar, Square, a notebook.
+No-shows and empty slots bleed real money ($40–$140 per groom, $75–$250 per training session),
+rebooking only happens when they remember to ask, and the software that exists is either built
+for someone bigger (facility platforms) or ignores them entirely (trainers).
 
 ## Current workaround
 
-A mix of DMs and texts, a paper or calendar-app schedule, and manually asking for reviews.
-Some pay for a generic scheduler that handles bookings but not reminders, waitlists, reviews,
-or retention — so the owner still stitches the rest together by hand.
+- Trainers: Acuity/Square for booking + a spreadsheet for notes + texts by hand. "Almost
+  nothing is built specifically for trainers."
+- Groomers: paper book, or MoeGo/Vagaro-class tools that overshoot a one-person shop on price
+  and complexity.
 
 ## Why this, why now
 
-I already do this work through Palmm for real service businesses, so I'm building from observed
-behaviour, not guesses (see `docs/research/`, including the Grand Prix scheduler lessons). The
-tooling finally makes it a solo build — AI coding in Cursor, LLMs for the fuzzy parts, Twilio
-for SMS — and Palmm's go-to-market (Meta ads → landing page → lead) is a proven way to actually
-sell it.
+Training software is a genuinely open market, and solo groomers are underserved by the
+incumbents' pricing. I can build it solo with Cursor (Next.js, Supabase, Twilio, Stripe), and
+the go-to-market is proven: vertical SaaS reliably acquires SMB owners on Meta at roughly a
+$150 CAC, and pet content is unusually cheap and engaging to advertise.
 
 ## In scope
 
 MVP — the core operating loop, sellable end to end:
 
-- Client self-serve online booking.
-- Automated SMS reminders to cut no-shows (with SMS consent captured at booking).
-- An owner dashboard showing the day/week at a glance, with clear empty and error states.
-- Automated review requests and waitlist fill for cancellations (fast-follow).
-- Booking-source attribution + Meta Pixel/Conversions so ad-driven bookings are provable.
+- Client self-serve booking (services sized for both grooming and training).
+- Automated SMS reminders to cut no-shows, with consent captured at booking.
+- Owner dashboard of the day/week, with clear empty and error states.
+- Rebooking automation on a cadence (grooming's every-4–8-week cycle) + review requests.
+- Client/dog records with session/progress notes the owner can share (the training wedge).
+- Booking-source attribution + Meta Pixel/Conversions so ad-driven signups are provable.
 
-Full story-level detail lives in [`docs/backlog.md`](backlog.md).
+Full story-level detail: [`docs/backlog.md`](backlog.md).
 
 ## Out of scope
 
-- Native mobile app (mobile web is enough for the ad → booking path).
-- In-app payments / POS (Stripe can come later).
-- Multi-location / franchise (the persona is the single-location owner).
-- A built-in client messaging inbox (no evidence yet; competes with the owner's phone).
+- Facility/enterprise features (boarding, daycare, kennel management, multi-location chains).
+- A consumer marketplace, and taking a % of the pro's revenue (flat subscription only).
+- Native mobile app (mobile web is enough for the ad → signup path).
+- Anything requiring an API I can't actually get.
+
+## Pricing model
+
+Three flat, feature-based tiers — no per-seat, no per-van, texts included (the anti-incumbent
+pitch). Owners connect their own Stripe; I make money on subscription, not their revenue.
+
+| Plan | Price (flat/mo) | For | Adds |
+| --- | --- | --- | --- |
+| Starter | $29 | brand-new solo pro | booking, SMS reminders, reviews, fair-use texts |
+| Pro (hero) | $49 | the core solo trainer/groomer | + rebooking automation, packages, waitlist, progress notes, Meta attribution |
+| Team | $99 | 2–4 person shop | multiple calendars, no per-seat trap |
+
+Annual ≈ 2 months free. 14-day trial. Fair-use text cap protects margin while marketing
+"texts included."
 
 ## What success looks like
 
-A real boutique owner runs a full week on it — clients book themselves, reminders cut
-no-shows, and the owner stops booking by hand — and, critically, at least one paying customer
-is acquired through a Meta ad funnel that points at a working product. If an owner would rather
-open this than their current setup, and an ad can legitimately sell it, it's working.
+A real pet pro runs a full week on it — clients book themselves, reminders cut no-shows, and
+rebookings happen automatically — and at least one paying customer is acquired through a Meta ad
+funnel pointing at a working product. If they'd rather open this than their spreadsheet, and an
+ad can legitimately sell it, it's working.
 
 ## Risks
 
-Biggest unknown: whether boutique owners will switch from the tool they already use, and
-whether the chosen niche is big and reachable enough at the target price for Meta-ad economics
-to work. Close behind: getting the integrations/APIs (calendar, SMS, Meta) I need, and staying
-compliant enough (SMS consent, ad claims) to advertise legitimately.
+- Grooming is contested (MoeGo et al.). Mitigation: lead with the open training market and win
+  solo groomers on simplicity + flat price + unlimited texts, not on feature parity.
+- Distribution/access — I need real pet-pro interviews and early customers to seed Meta
+  lookalikes. First job is getting 3 trainers/groomers on a call.
+- Scope: "do both" must stay one simple product, not a generic pet platform.
 
 ## Stack guess
 
-Built with Cursor, on my usual stack: Next.js / React / Tailwind (marketing site + app),
-Supabase (data + auth), Twilio (SMS), Stripe (payments, later), n8n (automations), Vercel,
-plus Meta Pixel + Conversions API. Week 7 teaches stack selection; CP-M3 decides it.
+Built with Cursor, on Next.js / React / Tailwind, Supabase (data + auth), Twilio (SMS), Stripe
+(payments), Vercel, plus Meta Pixel + Conversions API. Week 7 teaches stack selection; CP-M3
+decides it.
 
 ## Open questions
 
-- Which exact studio niche do we commit to first?
-- Google Calendar as the source of truth, or a booking calendar built in?
-- How much does the AI decide (auto-waitlist, auto-rebook) vs. just surface to the owner?
+- Product name.
+- Training-led first, or trainers + groomers truly co-equal at launch?
+- Exact feature split across the three tiers.
 
 ## Next
 
