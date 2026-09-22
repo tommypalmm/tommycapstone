@@ -2,15 +2,16 @@
 
 **Source.** Lab 3
 **Status.** Keep current, not historical. This is what we build against.
-**Product context.** Studio OS — booking + SMS + reviews + retention for a single-location
-boutique studio owner. (Working niche; tighten the persona as interviews land.)
+**Product context.** PetPro OS — booking + reminders + reviews + rebooking for independent dog
+trainers and groomers. Sold to the owner-operator; scaled via Meta ads. Flat, feature-based
+tiers ($29 / $49 / $99).
 
 ## Editor's note on evidence
-This is my product, not the model's. Every kept story points at evidence I can actually show:
-my productization research in `docs/research/` and my own observed behaviour running Palmm for
-real service businesses (e.g. the Grand Prix scheduler work). Where a line reads `‹quote: …›`,
-I still owe a direct interview quote or a dated log entry — I attach it or I cut the story.
-Ideas with no evidence yet live in **Won't**, not in Must.
+This is my product, not the model's. Every kept story points at evidence I can show: the market
+research in `docs/research/`, published pricing/cadence data, and my own observed behaviour
+running Palmm for service businesses. `‹quote: …›` marks a spot that still needs a direct
+interview quote from a real trainer/groomer, or the story gets cut. Unsupported ideas live in
+**Won't**, not Must.
 
 ---
 
@@ -18,162 +19,167 @@ Ideas with no evidence yet live in **Won't**, not in Must.
 
 ### MUST — ship is meaningless without it
 
-**S1 · Self-serve booking**
-**Story.** As a boutique studio owner, I want clients to book open slots themselves online,
-so that I stop booking every client by hand over DM and phone.
+**S1 · Self-serve booking (grooming + training)**
+**Story.** As an independent pet pro, I want clients to book the right service themselves online,
+so that I stop taking every booking by phone and DM.
 
 **Acceptance criteria**
-- [ ] Given an open slot, when a client selects it and submits their details, then the slot is
-      reserved and both client and owner receive a confirmation.
-- [ ] Given a slot that filled seconds earlier, when a client tries to book it, then it is
-      refused with a clear "no longer available" message and offered the next opening. (negative)
+- [ ] Given services defined by type/size (e.g. full groom – large, private lesson – 1hr), when a
+      client picks one and submits details, then the slot is reserved and both sides get a confirmation.
+- [ ] Given a slot that just filled, when a client tries to book it, then it's refused with a clear
+      "no longer available" message and offered the next opening. (negative)
 - [ ] A first-time client completes a booking in under 2 minutes with no owner contact.
 
-**Evidence.** `docs/research/competitors-and-features.md` — every competitor leads with
-self-serve booking; and observed: Palmm studio clients still take bookings manually by DM.
-‹quote: owner interview on manual-booking pain›
+**Evidence.** `docs/research/competitors-and-features.md`; trainers duct-tape Acuity+Square+sheets
+("almost nothing built for trainers"). ‹quote: owner on manual-booking pain›
 
 ---
 
 **S2 · Automated reminders (cut no-shows)**
-**Story.** As a boutique studio owner, I want confirmed clients reminded before their
-appointment, so that fewer of them no-show.
+**Story.** As an independent pet pro, I want confirmed clients reminded before their appointment,
+so that fewer of them no-show and I don't lose a $40–$250 slot.
 
 **Acceptance criteria**
-- [ ] Given a confirmed booking, when the appointment is 24h out, then the client is sent an
-      SMS reminder with time, location, and a cancel/reschedule link.
-- [ ] Given a client who cancels from that reminder, when they cancel, then the slot reopens
-      and the owner is notified. (negative / edge)
-- [ ] Every reminder send + outcome is logged so no-show rate is measurable without asking me.
+- [ ] Given a confirmed booking, when it's 24h out, then the client gets an SMS reminder with time,
+      service, and a cancel/reschedule link.
+- [ ] Given a client who cancels from the reminder, when they cancel, then the slot reopens and the
+      owner is notified. (negative / edge)
+- [ ] Every reminder + outcome is logged so no-show rate is measurable without asking me.
 
-**Evidence.** `docs/research/grand-prix-scheduler-lessons.md` — observed no-show pattern when
-no reminder was sent, and the drop after adding reminders. ‹quote: exact before/after figure›
+**Evidence.** `docs/research/grand-prix-scheduler-lessons.md` (observed no-show drop after reminders);
+published per-visit revenue $40–$250. ‹quote: before/after no-show figure›
 
 ---
 
 **S3 · Owner dashboard (one source of truth)**
-**Story.** As a boutique studio owner, I want one screen for today's and this week's bookings,
-so that I stop checking three tools to know what's happening.
+**Story.** As an independent pet pro, I want one screen for today's and this week's appointments,
+so that I stop checking a notebook, a calendar, and my texts.
 
 **Acceptance criteria**
-- [ ] Given bookings exist, when the owner opens the dashboard, then upcoming bookings show
-      client, service, and time, soonest first.
-- [ ] Given no bookings yet, when the owner opens it, then a clear empty state explains what
-      will appear here. (empty state)
-- [ ] Given a load/connection failure, when data can't be fetched, then an error state is shown
-      instead of a blank screen. (negative)
+- [ ] Given bookings exist, when the owner opens the dashboard, then upcoming appointments show
+      client, dog, service, and time, soonest first.
+- [ ] Given no bookings yet, when the owner opens it, then a clear empty state explains what will
+      appear here. (empty state)
+- [ ] Given a load/connection failure, when data can't be fetched, then an error state shows instead
+      of a blank screen. (negative)
 
-**Evidence.** Observed running Palmm: owners reconcile a calendar, a notes app, and texts to
-see their day. ‹quote: owner describing the "three tabs" problem›
+**Evidence.** Observed at Palmm clients: owners reconcile 3+ tools to see their day. ‹quote: the
+"three places" problem›
 
 ---
 
 **S4 · SMS consent capture**
-**Story.** As a client, I want to opt in to texts when I book, so that the studio can only
-text me if I agreed.
+**Story.** As a client, I want to opt in to texts when I book, so that the business can only text me
+if I agreed.
 
 **Acceptance criteria**
-- [ ] Given the booking form, when the client submits, then explicit SMS consent is recorded
-      with a timestamp and the wording shown.
-- [ ] Given a client who did not opt in, when reminders/marketing run, then they receive none.
-      (negative)
+- [ ] Given the booking form, when the client submits, then explicit SMS consent is recorded with a
+      timestamp and the wording shown.
+- [ ] Given a client who did not opt in, when reminders/marketing run, then they get none. (negative)
 
-**Evidence.** Compliance requirement I already follow at Palmm (TCPA / Twilio A2P 10DLC) — I
-can't legitimately run the SMS features or Meta funnel without it. Logged, observed practice.
+**Evidence.** Compliance I already follow at Palmm (TCPA / Twilio A2P 10DLC) — required to run the
+SMS features and the Meta funnel legitimately. Logged, observed practice.
 
 ---
 
 ### SHOULD — painful to omit, survivable
 
-**S5 · Automated review request**
-**Story.** As a boutique studio owner, I want a review request sent automatically after a
-visit, so that I get more reviews without remembering to ask.
+**S5 · Rebooking on cadence (the grooming retention engine)**
+**Story.** As a groomer, I want clients auto-nudged to rebook on their grooming cycle, so that my
+chair stays full without me chasing anyone.
 
 **Acceptance criteria**
-- [ ] Given a completed appointment, when it ends, then the client is sent one review request
-      with a direct link.
-- [ ] Given a client who already reviewed, when the job runs, then they are not asked again.
-      (negative)
+- [ ] Given a completed groom with a set cycle (e.g. 6 weeks), when the interval approaches, then the
+      client gets one rebooking prompt with a booking link.
+- [ ] Given a client who already has a future appointment, when the interval hits, then no nudge is
+      sent. (negative)
 
-**Evidence.** `docs/research/meta-gtm-and-unit-economics.md` — reviews as a top acquisition
-lever for boutiques; observed manual "can you leave a review?" asks at Palmm clients.
-‹quote: owner on how they ask for reviews today›
+**Evidence.** Published grooming cadence of every 4–8 weeks (recurring revenue); observed manual
+"time for a groom?" texts. ‹quote: groomer on rebooking today›
 
 ---
 
-**S6 · Waitlist auto-fill**
-**Story.** As a boutique studio owner, I want last-minute cancellations offered to a waitlist,
-so that freed slots still get filled and earn revenue.
+**S6 · Automated review request**
+**Story.** As an independent pet pro, I want a review request sent automatically after a visit, so
+that I build reviews without remembering to ask.
 
 **Acceptance criteria**
-- [ ] Given a waitlisted client and a freed slot, when the cancellation happens, then the next
-      waitlisted client is offered the slot by SMS with a claim window.
-- [ ] Given no one on the waitlist, when a slot frees, then it simply reopens for public
-      booking. (negative)
+- [ ] Given a completed appointment, when it ends, then the client gets one review request with a
+      direct link.
+- [ ] Given a client who already reviewed, when the job runs, then they aren't asked again. (negative)
 
-**Evidence.** `docs/research/grand-prix-scheduler-lessons.md` — empty last-minute slots = lost
-revenue; observed scramble to fill cancellations by hand. ‹quote: owner on cancellation loss›
+**Evidence.** `docs/research/meta-gtm-and-unit-economics.md` (reviews as acquisition lever); observed
+manual asks. ‹quote: how they ask today›
 
 ---
 
-**S7 · Booking-source attribution (prove the ad worked)**
-**Story.** As a boutique studio owner, I want to see which bookings came from my Meta ads,
-so that I know the ad spend is actually producing paying clients.
+**S7 · Client/dog records + session notes (the training wedge)**
+**Story.** As a dog trainer, I want to log session notes and homework the owner can see, so that I
+show real progress and keep clients through a package.
 
 **Acceptance criteria**
-- [ ] Given a booking that originated from a Meta ad link, when it completes, then its source
-      is recorded and a Meta conversion event is fired.
-- [ ] Given a booking with no ad source, when it completes, then it is recorded as organic,
-      not miscredited to ads. (negative)
+- [ ] Given a completed session, when the trainer logs notes/homework, then the client can view them
+      via a private link with no app to install.
+- [ ] Given a session with no notes entered, when the client opens the link, then they see a clear
+      "no notes yet" state, not an error. (negative / empty)
 
-**Evidence.** `docs/research/meta-gtm-and-unit-economics.md` and the Palmm lead-guarantee
-model — attribution is required to prove ROI and to run/optimize the Meta funnel at all.
+**Evidence.** Trainers keep progress in spreadsheets because generic booking tools don't (see
+research). ‹quote: trainer on tracking progress today›
 
 ---
 
 ### COULD — genuinely nice
 
-**S8 · Loyalty / punch-card**
-**Story.** As a boutique studio owner, I want a simple loyalty punch-card, so that regulars
-have a reason to keep booking with me.
+**S8 · Waitlist auto-fill**
+**Story.** As an independent pet pro, I want cancellations offered to a waitlist, so that freed slots
+still get filled.
 
 **Acceptance criteria**
-- [ ] Given a client with N completed visits, when they hit the threshold, then a reward is
-      flagged automatically.
-- [ ] Given a refunded or no-show visit, when counting toward the reward, then it does not
-      count. (negative)
+- [ ] Given a waitlisted client and a freed slot, when a cancellation happens, then the next client is
+      offered it by SMS with a claim window.
+- [ ] Given no one on the waitlist, when a slot frees, then it reopens for public booking. (negative)
 
-**Evidence.** `docs/research/boutique-studio-niches.md` — retention economics favour repeat
-visits. ‹quote: owner interview confirming they'd use loyalty — else demote to Won't›
+**Evidence.** Empty last-minute slots = lost revenue (grand-prix lessons). ‹quote: cancellation loss›
 
 ---
 
-**S9 · Rebooking nudge**
-**Story.** As a client, I want a nudge to book my next visit, so that I don't lapse without
-meaning to.
+**S9 · Booking-source attribution (prove the ad worked)**
+**Story.** As an owner, I want to see which signups/bookings came from Meta ads, so that I know the
+ad spend produced paying clients.
 
 **Acceptance criteria**
-- [ ] Given a completed visit, when a set interval passes with no future booking, then the
-      client gets exactly one rebooking prompt.
-- [ ] Given a client who already rebooked, when the interval passes, then no nudge is sent.
-      (negative)
+- [ ] Given a booking from a Meta ad link, when it completes, then its source is recorded and a Meta
+      conversion event fires.
+- [ ] Given a booking with no ad source, when it completes, then it's recorded as organic, not
+      miscredited to ads. (negative)
 
-**Evidence.** Observed at Palmm clients: lapsed regulars who "meant to rebook." ‹quote: owner
-or client on forgetting to rebook — else demote to Won't›
+**Evidence.** `docs/research/meta-gtm-and-unit-economics.md`; ~$150 SMB-SaaS Meta CAC needs attribution
+to optimize.
+
+---
+
+**S10 · Packages & deposits**
+**Story.** As an independent pet pro, I want to sell session packages and take a deposit at booking,
+so that clients commit and I protect high-value slots (board-and-train, multi-session).
+
+**Acceptance criteria**
+- [ ] Given a package/deposit service, when a client books, then payment is collected via the owner's
+      Stripe before the slot is confirmed.
+- [ ] Given a failed/declined payment, when the client submits, then the slot is not held and a clear
+      retry message shows. (negative)
+
+**Evidence.** Training sold in 4–8 session packages; board-and-train $1,000–$3,000/wk (published
+pricing). ‹quote: owner on deposits/packages›
 
 ---
 
 ### WON'T (this semester) — with why
 
-- **Native mobile app.** No evidence owners or clients need an installed app to book; a mobile
-  web funnel does the job and keeps the Meta ad → landing page path simple. Revisit if
-  interviews demand it.
-- **In-app payments / POS.** Stripe can come later. The core job this semester is filling slots
-  and cutting no-shows, not processing money. Cutting it keeps the MVP demonstrable.
-- **Multi-location / franchise.** The persona is the single-location owner. Multi-location is
-  a different buyer and would blur the niche the whole product is aimed at.
-- **In-app client messaging/inbox.** Tempting, but no interview evidence yet and it competes
-  with the owner's existing phone. Parked until evidence says otherwise.
+- **Facility features (boarding, daycare, kennel, multi-location).** That's MoeGo/Gingr's turf and a
+  different, heavier product; competing there kills the "simple for solos" wedge.
+- **Consumer marketplace.** No evidence solos want to share clients; adds huge scope.
+- **Taking a % of the pro's revenue.** Owners resent it (Fresha's 20% cut). Flat subscription only.
+- **Native mobile app.** Mobile web covers the ad → signup → booking path this semester.
 
 *(Won't is non-empty on purpose — I'll defend each cut out loud.)*
 
@@ -183,34 +189,31 @@ or client on forgetting to rebook — else demote to Won't›
 
 | MUST | SHOULD | COULD | WON'T (+ why) |
 | --- | --- | --- | --- |
-| S1 Self-serve booking | S5 Auto review request | S8 Loyalty punch-card | Native app — web is enough |
-| S2 Auto reminders | S6 Waitlist auto-fill | S9 Rebooking nudge | Payments/POS — later, keeps MVP small |
-| S3 Owner dashboard | S7 Booking-source attribution | | Multi-location — wrong persona |
-| S4 SMS consent | | | Client inbox — no evidence yet |
+| S1 Self-serve booking | S5 Rebooking cadence | S8 Waitlist auto-fill | Facility features — wrong product |
+| S2 Auto reminders | S6 Auto review request | S9 Meta attribution | Marketplace — no evidence |
+| S3 Owner dashboard | S7 Session notes (training) | S10 Packages & deposits | %-of-revenue — owners resent it |
+| S4 SMS consent | | | Native app — web is enough |
 
 ---
 
 ## Break-test log
-The break-test: could someone who never spoke to me tell pass from fail, with no hidden
-assumptions? Two AC sets run through it.
+Could someone who never spoke to me tell pass from fail, with no hidden assumptions?
 
-- **S1 (booking) — survived.** "Completes a booking in under 2 minutes with no owner contact"
-  is outsider-checkable and measurable; the add/negative case (slot already filled) is
-  explicit. No change needed.
-- **S2 (reminders) — failed, then fixed.** First draft read *"clients get reminders so fewer
-  no-show."* It broke: "fewer" isn't measurable, an outsider can't tell pass from fail, and
-  there was no negative case. Rewritten to a concrete 24h SMS with cancel link, a cancel→slot
-  reopens negative case, and a logged-outcome criterion so no-show rate is measurable.
+- **S1 (booking) — survived.** "Completes a booking in under 2 minutes with no owner contact" is
+  outsider-checkable and measurable; the slot-already-filled negative case is explicit.
+- **S2 (reminders) — failed, then fixed.** First draft was "clients get reminders so fewer no-show" —
+  "fewer" isn't measurable and there was no negative case. Rewritten to a concrete 24h SMS, a
+  cancel→slot-reopens negative case, and a logged-outcome criterion so no-show rate is measurable.
 
 ---
 
 ## MVP slice (smallest end-to-end demo)
 **Book → confirm → remind → owner sees it.** (S1 + S2 + the view half of S3, gated by S4 consent.)
 
-A real client picks an open slot online, opts in, gets a confirmation and a 24h SMS reminder,
-and the booking appears on the owner's dashboard. This is screen-recordable start to finish
-with no "and then imagine it saves" hand-waving. It is deliberately smaller than the full Must
-column — reviews (S5), waitlist (S6), and attribution (S7) are not in the slice.
+A real client books a groom or a lesson online, opts in, gets a confirmation and a 24h reminder, and
+it appears on the owner's dashboard. Screen-recordable start to finish with no "imagine it saves"
+hand-waving. Deliberately smaller than the full Must column — rebooking (S5), reviews (S6), and notes
+(S7) are not in the slice.
 
 ## Next
 
