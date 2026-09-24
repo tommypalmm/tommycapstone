@@ -81,7 +81,7 @@ pitch). Owners connect their own Stripe; I make money on subscription, not their
 | Plan | Price (flat/mo) | For | Adds |
 | --- | --- | --- | --- |
 | Starter | $29 | brand-new solo pro | booking, SMS reminders, reviews, fair-use texts |
-| Pro (hero) | $49 | the core solo trainer/groomer | + rebooking automation, packages, waitlist, progress notes, Meta attribution |
+| Pro (hero) | $49 | the core solo trainer/groomer | + rebooking automation, packages, progress notes, Meta attribution |
 | Team | $99 | 2–4 person shop | multiple calendars, no per-seat trap |
 
 Annual ≈ 2 months free. 14-day trial. Fair-use text cap protects margin while marketing

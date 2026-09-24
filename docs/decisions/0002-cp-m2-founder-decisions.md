@@ -8,6 +8,15 @@ This document is a direct Q&A transcript. Questions were raised during PRD revie
 draft. Answers are the founder's decisions as given. Use alongside [`02-prd.md`](../02-prd.md) as
 build input for Cursor.
 
+**Round 2 supersedes parts of this log.** See
+[`0003-cp-m2-founder-decisions-round-2.md`](0003-cp-m2-founder-decisions-round-2.md). Where they
+conflict, round 2 is the build target:
+
+- Calendar is Google only, full read and write. Apple Calendar is not in the product.
+- A client-facing slot that conflicts with Google Calendar shows as unavailable. No override/dismiss popup.
+- SMS is Twilio subaccounts: one brand/campaign, a subaccount per owner.
+- There is no waitlist. Do not model a Waitlist entity.
+
 ## 1. Naming
 **Q.** Is the product name locked before CP-M3, or do we build under a placeholder and rename later?
 **A.** Build under a placeholder now. Rename later. Do not block architecture or code on the final name.
@@ -24,6 +33,7 @@ gating mechanism config-driven so tier contents can change without a schema migr
 **A.** Sourced from the owner's own calendar, not a custom scheduler. Owners connect Google or
 Apple Calendar; the system scans busy blocks to derive open slots. Owners without a calendar can
 get a fresh one created inside the platform's flow.
+**Superseded by round 2 (Decision #16).** Google Calendar only, full read and write. Apple Calendar is not supported. A misconfigured owner calendar is the owner's responsibility.
 **Implication.** External calendar sync is a core MVP dependency, a first-class integration
 alongside Twilio and Stripe, not optional.
 
@@ -38,6 +48,7 @@ configurable per owner in settings.
 **A.** Each staff member's bookings write to their own connected calendar. On conflict, the system
 surfaces a popup so the owner/staff can override or dismiss. Default resolution favors the
 Studio-side booking when overridden.
+**Superseded for the client booking page by round 2 (Decision #18).** A conflicting slot shows as unavailable. No popup and no override/dismiss flow.
 
 ## 6. SMS number strategy and A2P 10DLC ownership
 **Q.** Who owns A2P 10DLC registration, and can a single Twilio number serve every owner account?
@@ -50,6 +61,7 @@ vetting, and all owners share one deliverability reputation. Scalable path: Twil
 a shared brand registration and per-owner (or pooled) campaigns, often via a reseller/ISV program.
 This is a CP-M3 decision; resolve before locking the Twilio design, since retrofitting number
 architecture after owners are live is disruptive.
+**Superseded by round 2 (Decision #24).** The build is Twilio subaccounts: one brand/campaign registration, with a subaccount per owner. The shared number is not the plan.
 
 ## 7. Booking cutoff window
 **Q.** What if a booking is made less than 24 hours before the appointment?
@@ -93,14 +105,13 @@ event logic and conversion taxonomy.
 tracking is limited to whether the request was dispatched.
 
 ## 14. Items flagged unclear (follow-up before CP-M3)
-- **Waitlist as a data entity.** Model a waitlisted client as a Booking with a waitlisted status,
-  or as its own entity? Decides how claim windows/expiration work.
+- **Waitlist as a data entity.** Closed by round 2 (Decision #25). The feature is cut. There is no Waitlist entity to model.
 - **Rebook suppression scope.** Suppress the nudge on any future appointment for the client, or
   only for the same client + same service? Needs a founder call based on grooming vs training.
 - **Conversion events for leads that never book.** Should a Lead that never books still fire a
   top-of-funnel Meta signal? Revisit when Meta CAPI work starts (item 12).
 - **Job queue choice.** n8n (external dependency + hosting) vs Supabase scheduled functions
-  (one platform). Decide at CP-M3; reminders/nudges/waitlist all depend on it.
+  (one platform). Decide at CP-M3; reminders and nudges depend on it.
 - **Row-level security policy design.** Draft the RLS policies with the schema at CP-M3; don't
   retrofit.
 - **Environments before production.** Sandbox/staging for Twilio, Stripe/Square, and calendar so
@@ -115,9 +126,9 @@ deposit policy, rebooking cadence) is an owner-configured setting. State once, c
 principle in the PRD.
 
 ## Summary of items that block CP-M3 architecture
-- Item 3: calendar sync is a first-class integration, not optional.
-- Item 6: SMS number / A2P 10DLC strategy needs a real decision (shared number is a compliance risk).
-- Item 8: keyword-reply fallback and number provisioning are the same decision as item 6.
-- Item 9: Stripe/Square dual support needs a processor abstraction.
-- Item 14: waitlist modeling, rebook suppression scope, job queue (n8n vs Supabase), and RLS design
-  must be resolved in [`03-architecture.md`](../03-architecture.md).
+- Item 3: calendar sync is a first-class integration, not optional. Provider is Google Calendar (round 2).
+- Item 6: closed by round 2. Twilio subaccounts, one brand/campaign, per owner.
+- Item 8: keyword-reply fallback copy can still be tuned. Number provisioning is closed.
+- Item 9: Stripe/Square dual support needs a processor abstraction. Parity is not verified yet (round 2, Decision #21).
+- Item 14: rebook suppression scope, job queue (n8n vs Supabase), and RLS design are still open for
+  [`03-architecture.md`](../03-architecture.md). Waitlist modeling is closed.
