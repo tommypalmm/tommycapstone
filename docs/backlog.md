@@ -2,9 +2,17 @@
 
 **Source.** Lab 3
 **Status.** Keep current, not historical. This is what we build against.
-**Product context.** PetPro OS — booking + reminders + reviews + rebooking for independent dog
-trainers and groomers. Sold to the owner-operator; scaled via Meta ads. Flat, feature-based
-tiers ($29 / $49 / $99).
+**Product context.** Studio OS (working placeholder name) — booking + reminders + reviews +
+rebooking for independent dog trainers and groomers. Availability comes from the owner's own
+calendar; payments run through the owner's Stripe or Square; sold to the owner-operator; scaled via
+Meta ads (later upsell). Flat, feature-based tiers ($29 / $49 / $99) — provisional and config-driven.
+
+## Decisions applied (CP-M2 review)
+Per [`decisions/0002-cp-m2-founder-decisions.md`](decisions/0002-cp-m2-founder-decisions.md):
+calendar sync (Google/Apple) is a core integration; payments support Stripe **or** Square;
+bookings are blocked under 24h out; policies (deposit/refund/cancellation/cadence/buffer/timezone)
+are owner-configured; tier gating is config-driven (tracked as **B1**); Meta Pixel now, CAPI later.
+Waitlist entity modeling and rebook-suppression scope are open for CP-M3.
 
 ## Editor's note on evidence
 This is my product, not the model's. Every kept story points at evidence I can show: the market
@@ -24,10 +32,13 @@ interview quote from a real trainer/groomer, or the story gets cut. Unsupported 
 so that I stop taking every booking by phone and DM.
 
 **Acceptance criteria**
-- [ ] Given services defined by type/size (e.g. full groom – large, private lesson – 1hr), when a
-      client picks one and submits details, then the slot is reserved and both sides get a confirmation.
+- [ ] Given services defined by type/size (e.g. full groom – large, private lesson – 1hr) and open
+      slots derived from the owner's connected calendar, when a client picks one and submits details,
+      then the slot is reserved and both sides get a confirmation.
 - [ ] Given a slot that just filled, when a client tries to book it, then it's refused with a clear
       "no longer available" message and offered the next opening. (negative)
+- [ ] Given a requested time less than 24 hours away, when a client tries to book it, then it's
+      blocked with a clear message. (negative)
 - [ ] A first-time client completes a booking in under 2 minutes with no owner contact.
 
 **Evidence.** `docs/research/competitors-and-features.md`; trainers duct-tape Acuity+Square+sheets
@@ -140,6 +151,8 @@ still get filled.
 - [ ] Given no one on the waitlist, when a slot frees, then it reopens for public booking. (negative)
 
 **Evidence.** Empty last-minute slots = lost revenue (grand-prix lessons). ‹quote: cancellation loss›
+**Open (CP-M3).** Model a waitlisted client as a Booking with a `waitlisted` status or as its own
+entity? Decides how claim windows and expiration work.
 
 ---
 
@@ -148,8 +161,8 @@ still get filled.
 ad spend produced paying clients.
 
 **Acceptance criteria**
-- [ ] Given a booking from a Meta ad link, when it completes, then its source is recorded and a Meta
-      conversion event fires.
+- [ ] Given a booking from a Meta ad link, when it completes, then its source is recorded (and, once
+      Meta ads are turned on, a conversion event fires — Pixel is embedded now, CAPI deferred).
 - [ ] Given a booking with no ad source, when it completes, then it's recorded as organic, not
       miscredited to ads. (negative)
 
@@ -164,7 +177,7 @@ so that clients commit and I protect high-value slots (board-and-train, multi-se
 
 **Acceptance criteria**
 - [ ] Given a package/deposit service, when a client books, then payment is collected via the owner's
-      Stripe before the slot is confirmed.
+      chosen processor (Stripe or Square) before the slot is confirmed.
 - [ ] Given a failed/declined payment, when the client submits, then the slot is not held and a clear
       retry message shows. (negative)
 
