@@ -8,11 +8,13 @@ calendar; payments run through the owner's Stripe or Square; sold to the owner-o
 Meta ads (later upsell). Flat, feature-based tiers ($29 / $49 / $99) — provisional and config-driven.
 
 ## Decisions applied (CP-M2 review)
-Per [`decisions/0002-cp-m2-founder-decisions.md`](decisions/0002-cp-m2-founder-decisions.md):
-calendar sync (Google/Apple) is a core integration; payments support Stripe **or** Square;
-bookings are blocked under 24h out; policies (deposit/refund/cancellation/cadence/buffer/timezone)
-are owner-configured; tier gating is config-driven (tracked as **B1**); Meta Pixel now, CAPI later.
-Waitlist entity modeling and rebook-suppression scope are open for CP-M3.
+Per [`decisions/0002-cp-m2-founder-decisions.md`](decisions/0002-cp-m2-founder-decisions.md) and
+[`decisions/0003-cp-m2-founder-decisions-round-2.md`](decisions/0003-cp-m2-founder-decisions-round-2.md):
+calendar sync is Google only (full read/write); Apple Calendar is out; a conflicting slot shows as
+unavailable; payments support Stripe **or** Square for client charges, while the SaaS fee is paid to
+the founder; bookings are blocked under 24h out; policies are owner-configured; tier gating is
+config-driven (tracked as **B1**); Meta Pixel now, CAPI later. SMS is Twilio subaccounts under one
+brand/campaign. S8 waitlist is cut, not deferred. Rebook-suppression scope is still open for CP-M3.
 
 ## Editor's note on evidence
 This is my product, not the model's. Every kept story points at evidence I can show: the market
@@ -37,6 +39,16 @@ so that I stop taking every booking by phone and DM.
       then the slot is reserved and both sides get a confirmation.
 - [ ] Given a slot that just filled, when a client tries to book it, then it's refused with a clear
       "no longer available" message and offered the next opening. (negative)
+- [ ] Given a slot that overlaps an event on the owner's Google Calendar, when the client views
+      availability, then that slot is unavailable. There is no override or dismiss step. (negative)
+- [ ] Given two clients confirming the same staff member and time slot at the same time, when both
+      confirms are submitted, then there is no hold step, the colliding write is rejected, and both
+      clients are told to try again. (negative)
+- [ ] Given an owner who has not set operating hours, booking interval, and each service's duration
+      and settings, when a client opens the booking page, then it does not accept a booking. (negative)
+- [ ] Given a phone number already stored for this account, when it is entered again with different
+      spacing, dashes, or country-code formatting, then the booking attaches to that client instead of
+      creating a duplicate.
 - [ ] Given a requested time less than 24 hours away, when a client tries to book it, then it's
       blocked with a clear message. (negative)
 - [ ] A first-time client completes a booking in under 2 minutes with no owner contact.
@@ -141,21 +153,6 @@ research). ‹quote: trainer on tracking progress today›
 
 ### COULD — genuinely nice
 
-**S8 · Waitlist auto-fill**
-**Story.** As an independent pet pro, I want cancellations offered to a waitlist, so that freed slots
-still get filled.
-
-**Acceptance criteria**
-- [ ] Given a waitlisted client and a freed slot, when a cancellation happens, then the next client is
-      offered it by SMS with a claim window.
-- [ ] Given no one on the waitlist, when a slot frees, then it reopens for public booking. (negative)
-
-**Evidence.** Empty last-minute slots = lost revenue (grand-prix lessons). ‹quote: cancellation loss›
-**Open (CP-M3).** Model a waitlisted client as a Booking with a `waitlisted` status or as its own
-entity? Decides how claim windows and expiration work.
-
----
-
 **S9 · Booking-source attribution (prove the ad worked)**
 **Story.** As an owner, I want to see which signups/bookings came from Meta ads, so that I know the
 ad spend produced paying clients.
@@ -188,6 +185,10 @@ pricing). ‹quote: owner on deposits/packages›
 
 ### WON'T (this semester) — with why
 
+- **Waitlist auto-fill (S8).** Cut entirely in founder decision #25 (round 2, September 23, 2026),
+  not deferred. No claim window, no ordering logic, no Waitlist entity. Freed slots reopen for
+  public booking and are not offered to a queue.
+- **Apple Calendar.** Out of scope (decision #16). Google Calendar only.
 - **Facility features (boarding, daycare, kennel, multi-location).** That's MoeGo/Gingr's turf and a
   different, heavier product; competing there kills the "simple for solos" wedge.
 - **Consumer marketplace.** No evidence solos want to share clients; adds huge scope.
@@ -202,10 +203,12 @@ pricing). ‹quote: owner on deposits/packages›
 
 | MUST | SHOULD | COULD | WON'T (+ why) |
 | --- | --- | --- | --- |
-| S1 Self-serve booking | S5 Rebooking cadence | S8 Waitlist auto-fill | Facility features — wrong product |
-| S2 Auto reminders | S6 Auto review request | S9 Meta attribution | Marketplace — no evidence |
-| S3 Owner dashboard | S7 Session notes (training) | S10 Packages & deposits | %-of-revenue — owners resent it |
+| S1 Self-serve booking | S5 Rebooking cadence | S9 Meta attribution | Facility features — wrong product |
+| S2 Auto reminders | S6 Auto review request | S10 Packages & deposits | Marketplace — no evidence |
+| S3 Owner dashboard | S7 Session notes (training) | | %-of-revenue — owners resent it |
 | S4 SMS consent | | | Native app — web is enough |
+| | | | S8 Waitlist — cut entirely, not deferred |
+| | | | Apple Calendar — out of scope |
 
 ---
 

@@ -6,6 +6,7 @@
 **Working title.** Studio OS (placeholder, rename later, per Decision #1, does not block build).
 **Input.** [`01-concept-brief.md`](01-concept-brief.md), [`backlog.md`](backlog.md),
 [`decisions/0002-cp-m2-founder-decisions.md`](decisions/0002-cp-m2-founder-decisions.md),
+[`decisions/0003-cp-m2-founder-decisions-round-2.md`](decisions/0003-cp-m2-founder-decisions-round-2.md),
 [`research/`](research/)
 
 ## Overview
@@ -22,7 +23,10 @@ back-and-forth texts, phone tag, and a paper book. Studio OS removes that commun
 instead of making them learn yet another app.
 
 Every requirement traces to a backlog story (S1–S10 in [`backlog.md`](backlog.md)); founder
-decisions are recorded in [`0002-cp-m2-founder-decisions.md`](decisions/0002-cp-m2-founder-decisions.md).
+decisions are recorded in [`0002-cp-m2-founder-decisions.md`](decisions/0002-cp-m2-founder-decisions.md)
+and [`0003-cp-m2-founder-decisions-round-2.md`](decisions/0003-cp-m2-founder-decisions-round-2.md).
+Round 2 supersedes round 1 where they conflict: Google Calendar only, no waitlist, Twilio
+subaccounts, and a separate founder-paid SaaS bill.
 
 ## Design principle (platform-wide)
 
@@ -57,8 +61,7 @@ don't know how to take the business to the next level or where to start with tec
 **How will the target users benefit if the problem is solved?**
 - They stop losing money to no-shows and unreturned messages; the booking page works 24/7 while
   they're with a dog.
-- Their calendar fills itself: freed slots get filled from a waitlist, and past clients get
-  auto-nudged to rebook on their cadence.
+- Their calendar fills itself: past clients get auto-nudged to rebook on their cadence.
 - They look bigger and more professional than competitors still working out of a notebook.
 - They finally see their business in one place and can grow without hiring a front desk.
 - They keep running their business their way, because every policy is their setting, not ours.
@@ -85,8 +88,9 @@ Conversions API event taxonomy and attribution logic are deferred (Decision #12)
   no-shows with automatic texts, and auto-rebook, so an owner can grow without a front desk.
 
 **Secondary goals**
-- Same-day activation for non-technical owners (done-for-you setup, import contacts, connect a
-  calendar or create one).
+- Same-day activation for non-technical owners. The go-live gate is small: operating hours,
+  booking interval, and each service's duration and settings. Not an extended wizard
+  (Decision #17).
 - Let every owner run their business their way: deposits, refunds, cancellation, and cadence are
   their configurable settings, not our fixed rules (Decision #10, #15).
 - Give trainers a reason to stay (visible session progress) and groomers a reason to stay
@@ -125,27 +129,34 @@ Not the buyer, but their experience drives the owner's willingness to pay.
 1. **Self-serve booking (S1)** — services by type (grooming/training) and size/duration, each with
    price and optional deposit; instant confirmations. A hard rule: bookings cannot be made less
    than 24 hours in advance; the flow blocks near-term self-serve bookings (Decision #7).
-2. **Availability from the owner's calendar (S1, Decision #3)** — availability is derived from the
-   owner's own Google or Apple Calendar (busy blocks → open slots). Owners without a calendar can
-   have one created inside the setup flow. Calendar sync is a first-class MVP integration, not
-   optional.
+2. **Availability from the owner's Google Calendar (S1, Decision #3, #16)** — availability is
+   derived from the owner's Google Calendar only (busy blocks → open slots). Google gets full read
+   and write access so staff bookings are written onto that calendar. Apple Calendar is out of
+   scope. If the owner's own calendar setup is wrong, that is the owner's responsibility, not a
+   platform failure mode to design heavily around. Owners without a calendar can have a Google
+   Calendar created inside the setup flow. Calendar sync is a first-class MVP integration.
 3. **Multi-staff scheduling + buffers (Decision #4)** — multiple staff, each with their own hours;
    book different staff at different times, or the same slot across different staff (multi-provider).
-   Buffer time between bookings is an owner setting.
-4. **Two-way calendar sync + conflict resolution (Decision #5)** — each staff member's bookings
-   write to their own connected calendar. On a conflict between an external event and a Studio-side
-   booking, a popup lets the owner/staff override or dismiss; override defaults to favoring the
-   Studio-side booking.
-5. **Embeddable booking, everywhere (S1)** — a booking widget the owner drops onto their own site
-   with one snippet, plus a shareable link for Instagram bio/Google/texts, and a hosted page if
-   they have no website. A Meta Pixel is embedded on this widget by default.
+   Buffer time between bookings is an owner setting. Staff have their own logins. The owner edits
+   business settings; staff can view calendars and edit bookings only. That split is enforced in
+   the backend (Decision #22).
+4. **Two-way Google Calendar sync (Decision #5, superseded for the booking page by #18)** — each
+   staff member's bookings write to their connected Google Calendar. If a slot conflicts with an
+   external event, it shows as unavailable on the client booking calendar. No popup and no
+   override/dismiss flow. There is no pre-booking hold. Two confirms of the same staff + time slot
+   are both rejected and both clients are told to try again; a unique constraint on staff plus
+   time slot makes the colliding write fail (Decision #19).
+5. **Embeddable booking, everywhere (S1, Decision #27)** — a booking widget the owner drops onto
+   their own site with one snippet, plus a shareable link for Instagram bio/Google/texts. The
+   hosted experience is a widget on one shared booking domain, not a unique subdomain per owner.
+   The page accepts bookings only after operating hours, booking interval, and each service's
+   duration and settings are set (Decision #17). A Meta Pixel is embedded on this widget by default.
 6. **Automated SMS reminders (S2)** — 24h reminder with a cancel/reschedule link; cancel reopens
    the slot and notifies the owner; every send + outcome logged. Simple keyword replies (reply C to
    confirm, cancel, STOP). Unrecognized replies get a single auto fallback pointing to a human
    contact path (owner's link/number), logged like any other reply (Decision #8, provisional).
 7. **Owner dashboard + "Revenue Recovered" (S3)** — today/this-week view with empty and error
-   states, plus a running tally of money saved from prevented no-shows, filled waitlist slots, and
-   auto-rebookings.
+   states, plus a running tally of money saved from prevented no-shows and auto-rebookings.
 8. **SMS consent capture (S4)** — explicit, timestamped opt-in; no consent, no texts; honors STOP.
 9. **Auto-rebooking on cadence (S5)** — per-service rebook cycle; one nudge with a link; suppressed
    if a future appointment exists (exact suppression scope is an open CP-M3 question, see below).
@@ -153,24 +164,35 @@ Not the buyer, but their experience drives the owner's willingness to pay.
     The platform marks the request **sent**; it does not verify a review was actually posted
     (Decision #13).
 11. **Client/dog records + session notes (S7)** — notes/homework per session, viewable by the
-    client via a private link (no app), the training wedge.
-12. **Waitlist auto-fill (S8)** — freed slots offered to the next waitlisted client by SMS with a
-    claim window. (Data-model shape is an open CP-M3 decision, see below.)
-13. **Owner-configured policies (Decision #10, differentiator)** — deposit, refund, bundle, and
+    client via a private link (no app), the training wedge. A returning client is the same Client
+    when the phone number matches for that Account, after normalizing to E.164 (Decision #23).
+    Whether session-note and review-request links expire, or can be revoked, is not decided
+    (Decision #26).
+12. **Owner-configured policies (Decision #10, differentiator)** — deposit, refund, bundle, and
     cancellation rules are the owner's settings; the platform enforces whatever they configure and
     imposes no fixed policy.
-14. **Payments: packages & deposits (S10)** — deposits and multi-session packages through the
-    owner's own processor (**Stripe or Square**, Decision #9).
+13. **Payments: packages & deposits (S10)** — deposits and multi-session packages through the
+    owner's own processor (**Stripe or Square**, Decision #9). That account is only for the
+    owner's client payments. The SaaS subscription is a separate bill paid to the founder
+    (Decision #20). Stripe and Square are believed equivalent for these flows; parity is not
+    verified and does not block the initial build (Decision #21).
+14. **Data export (Decision #28)** — CSV of the owner's data, available anytime to an active
+    owner and again during offboarding.
 15. **Rewards/discounts (last, lowest priority)** — a simple loyalty perk once the core loop is
     proven.
+
+**Cut, not deferred (Decision #25).** Waitlist auto-fill (S8) is removed. There is no claim
+window, no ordering logic, and no Waitlist entity. Decision #14's waitlist modeling question is
+moot.
 
 ## What makes it hard to say no to
 
 - **Run your business your way.** Every policy, deposit, refund, cancellation, cadence, is the
   owner's setting. Studio OS gives them the infrastructure without forcing them to change how their
   business already runs (Decision #10, #15). This is the core positioning.
-- **Done-for-you setup for non-techy owners.** Import contacts, connect (or create) a calendar, and
-  the portal + booking page are built in minutes.
+- **Done-for-you setup for non-techy owners.** Import contacts and connect (or create) a Google
+  Calendar. Going live only requires operating hours, a booking interval, and each service's
+  duration and settings. That is the whole gate, not an extended wizard (Decision #17).
 - **It works over text.** Reminders and rebooking run on SMS; a 58-year-old groomer adopts it in a day.
 - **ROI you can see.** The "Revenue Recovered" number turns the subscription into obvious profit.
 - **Embeddable anywhere.** One snippet on their site, one link in their bio.
@@ -180,29 +202,38 @@ Not the buyer, but their experience drives the owner's willingness to pay.
 - **Mobile-first, dead simple.** Big touch targets, minimal steps, plain language, no jargon. Calm,
   premium, Apple-inspired.
 - **Owner app:** home dashboard (today's schedule, alerts, Revenue Recovered), tap-to-add booking,
-  client/dog list, settings (hours, buffers, policies, cadence, time zone), calendar-conflict popups.
-- **Client booking page/widget:** branded to the owner, 3 taps to book (service → time → details),
-  availability from the owner's calendar, clear consent + deposit steps, confirmation; embeddable or
-  hosted.
+  client/dog list, settings (hours, booking interval, buffers, policies, cadence, time zone).
+  Settings are owner-only. Staff see calendars and can edit bookings.
+- **Client booking page/widget:** branded to the owner, on one shared booking domain (no per-owner
+  subdomain), 3 taps to book (service → time → details), availability from Google Calendar, clear
+  consent + deposit steps, confirmation; embeddable on the owner's site or hosted on the shared
+  domain. A slot that conflicts with Google Calendar is simply unavailable. No conflict popup.
 - **Every screen has an empty state and an error state** (per `CLAUDE.md`).
 - **Accessibility:** large fonts, high contrast, SMS fallbacks.
 
 ## Payment processing
 
-- **Processor is the owner's choice: Stripe or Square** (Decision #9). Built as a processor
-  abstraction in the service layer, not a Stripe-only integration.
-- Each owner connects their own processor account; money lands with them, not the platform.
+Two separate payment relationships (Decision #20):
+
+- **Platform SaaS fee (Starter/Pro/Team).** Paid to the founder directly, always, no matter which
+  processor the owner connects. Failed-payment retries and dunning apply to this bill, then a
+  defined offboarding on repeated failure (see Account lifecycle).
+- **Owner client payments.** The processor is the owner's choice: Stripe or Square (Decision #9).
+  Each owner connects their own account; deposits and packages land with them, not the platform.
+  Make that connection as easy as possible. It is not the SaaS billing relationship.
 - Deposits required at booking on selected services; packages sold as prepaid bundles. Deposit,
   refund, and cancellation behavior follow the owner's configured policy (Decision #10).
-- Subscriptions (Starter/Pro/Team) billed to the owner; failed-payment retries and dunning, then a
-  defined offboarding on repeated failure (see Account lifecycle).
+- Stripe and Square are believed equivalent for package billing and refunds. Parity is not
+  verified. Confirm it before the processor abstraction is finalized. It does not block the
+  initial build (Decision #21).
 - No percentage cut of the owner's revenue, ever.
 
 ## Account lifecycle & offboarding (Decision #11)
 
 If an owner's subscription fails repeatedly and the account is shut down, the shutdown flow must
 leave the platform with no liability for the owner's data, active bookings, or client obligations:
-- A defined offboarding state with a data-export window for the owner.
+- A defined offboarding state. CSV export is available anytime to an active owner, and again in
+  this shutdown flow. It is not a one-time event that only fires on shutdown (Decision #28).
 - The client-facing booking page/widget is taken down cleanly (no dead booking links).
 - No orphaned scheduled jobs, all pending reminders/nudges for the shuttered account are cancelled.
 
@@ -210,12 +241,17 @@ leave the platform with no liability for the owner's data, active bookings, or c
 
 **Owner side**
 1. Clicks a Meta ad, lands on the offer page, starts a trial or books a demo.
-2. Done-for-you setup: imports contacts; connects Google/Apple Calendar (or has one created);
-   sets services, hours, buffers, and policies.
-3. Connects a processor (Stripe or Square) and registers under the platform's SMS sender.
-4. Embeds the booking widget on their site and drops the link in their Instagram bio.
-5. Runs the day from the dashboard; resolves any calendar-conflict popups; watches Revenue Recovered
-   climb.
+2. Done-for-you setup stays light. Before the booking page accepts anyone, the owner sets
+   operating hours, booking interval, and each service's duration and settings (Decision #17).
+   They import contacts, connect Google Calendar (or have one created), and set buffers and
+   policies in the same pass. Apple Calendar is not offered.
+3. Connects Stripe or Square for their own client payments, separate from the SaaS subscription
+   paid to the founder. SMS uses one Twilio brand/campaign, with a subaccount per owner
+   (Decision #24).
+4. Embeds the booking widget on their site and drops the link in their Instagram bio. The hosted
+   page is on one shared domain, not a subdomain of their own.
+5. Runs the day from the dashboard. Staff log in separately and can view calendars and edit
+   bookings, not business settings. Watches Revenue Recovered climb. Can download a CSV anytime.
 
 **Customer (pet owner) side**
 1. Finds the business (ad, the owner's website, or IG bio link).
@@ -231,20 +267,30 @@ Postgres (via Supabase) with per-account row-level security (RLS policy design i
 Core entities:
 
 - **Account** (owner/business) — business_name, owner_name, email, phone, plan
-  (starter/pro/team), **payment_processor (stripe/square)**, **timezone**, **default policy fields**
-  (deposit rule, refund rule, cancellation rule, default rebook cadence, default buffer_minutes).
-- **Staff** — belongs to Account; name, role (owner/staff), **working_hours**, **buffer_minutes**
-  (override). For multi-provider scheduling.
-- **CalendarConnection** — belongs to Staff; provider (google/apple), external_calendar_id, auth
-  token ref, sync_state. Read for availability, write for bookings (Decision #3, #5).
+  (starter/pro/team), **client payment processor (stripe/square)** — not the SaaS bill,
+  **twilio_subaccount_id**, **timezone**, **booking_interval_min**, **operating hours**,
+  **default policy fields** (deposit rule, refund rule, cancellation rule, default rebook cadence,
+  default buffer_minutes). Hours, interval, and each service's duration/settings are required
+  before the booking page goes live (Decision #17). The booking address is a widget on one shared
+  domain, not a per-owner subdomain (Decision #27).
+- **Staff** — belongs to Account; name, role (owner/staff), **auth_user_id** (own login, distinct
+  from the owner), **working_hours**, **buffer_minutes** (override). Owner edits business
+  settings. Staff view calendars and edit bookings only. Enforced in the backend, not only hidden
+  in the UI (Decision #22).
+- **CalendarConnection** — belongs to Staff; provider (**google only**), external_calendar_id, auth
+  token ref, sync_state. Full read and write (Decision #16). Apple is not a provider.
 - **Service** — belongs to Account; name, type (grooming/training), size_tier, duration_min, price,
   requires_deposit, deposit_amount, rebook_cycle_days, **policy overrides** (deposit/cancellation),
   active.
-- **Client** — belongs to Account; name, phone, email, sms_consent, sms_consent_at.
+- **Client** — belongs to Account; name, phone, email, sms_consent, sms_consent_at. Phone is the
+  unique client key **for that Account only**, stored normalized (E.164) so spaces, dashes, and a
+  missing country code still match. Not unique across accounts (Decision #23).
 - **Dog** — belongs to Client; name, breed, size, notes.
 - **Booking** — belongs to Account, Client, Dog, Service (and a specific Staff); start_time,
   end_time, status (pending/confirmed/completed/cancelled/no_show), source (organic/meta/referral),
-  external_event_id (the written calendar event).
+  external_event_id (the written Google Calendar event). Unique on staff + start time: no
+  pre-booking hold; a colliding confirm fails and both clients are told to try again
+  (Decision #19).
 - **Lead** — belongs to Account; name, phone, source, status (new/contacted/booked/lost).
 - **Reminder** — belongs to Booking; channel (sms), scheduled_for, sent_at, status, outcome
   (confirmed/cancelled/none/fallback).
@@ -253,15 +299,16 @@ Core entities:
   verification, Decision #13).
 - **Package** — belongs to Client + Service; sessions_total, sessions_used.
 - **Payment** — belongs to Account + Client, optional Booking or Package; amount, type
-  (deposit/package/full/subscription), **processor (stripe/square)**, **processor_payment_id**,
-  status.
+  (deposit/package/full), **processor (stripe/square)**, **processor_payment_id**, status.
+  Client payments only. The SaaS subscription is a separate bill paid to the founder
+  (Decision #20).
 - **Reward** (last-priority) — belongs to Account + Client; type, threshold, status.
 - **ConversionEvent** (deferred with Meta CAPI) — belongs to Booking; source, utm, meta_event_id,
   fired_at. Pixel fires client-side now; server-side CAPI events are later (Decision #12).
 
-**Open modeling questions for CP-M3 (Decision #14)**
-- **Waitlist:** model a waitlisted client as a Booking with a `waitlisted` status, or as its own
-  `WaitlistEntry` entity? Decides how claim windows and expiration work.
+**Open modeling questions for CP-M3 (Decision #14, updated by round 2)**
+- **Waitlist:** removed. There is no Waitlist entity and no `waitlisted` status to decide
+  (Decision #25). Do not carry this question forward.
 - **Rebook suppression scope:** suppress on any future appointment for the client, or only the same
   client + same service? Needs a founder call (grooming vs training behave differently).
 - **Lead conversion events:** should a Lead that never books still fire a top-of-funnel Meta signal?
@@ -277,12 +324,14 @@ Core entities:
 
 - Supabase (Postgres, Auth, Storage) with per-account row-level security (policies designed at CP-M3).
 - **Service-layer abstractions** so vendors are swappable: a `PaymentProcessor` interface (Stripe,
-  Square) and a `CalendarProvider` interface (Google, Apple), plus the SMS provider.
+  Square) and a Google Calendar integration, plus the SMS provider. Do not finalize the
+  Stripe/Square abstraction until package billing and refund parity is confirmed (Decision #21).
+  There is no Apple Calendar provider.
 - **Config-driven feature gating (Decision #2):** plan → feature mapping lives in configuration, not
   hardcoded, so Starter/Pro/Team contents can change (backlog B1) without a schema migration.
-- **Job queue** for scheduled, idempotent work (reminders, rebooking nudges, review requests,
-  waitlist offers). Engine choice, n8n vs Supabase scheduled functions, is a CP-M3 decision
-  (Decision #14).
+- **Job queue** for scheduled, idempotent work (reminders, rebooking nudges, review requests).
+  No waitlist jobs (Decision #25). Engine choice, n8n vs Supabase scheduled functions, is a
+  CP-M3 decision (Decision #14).
 - Webhooks: inbound SMS (keyword replies + fallback), processor payment status, calendar change
   notifications.
 - On account shutdown, a cleanup job cancels all pending scheduled work for that account (Decision #11).
@@ -293,50 +342,53 @@ Core entities:
 - Next.js / React / Tailwind, mobile-first, server-rendered.
 - Owner app (dashboard, bookings, clients/dogs, settings) and a branded public booking page, plus an
   embeddable booking widget (a small script the owner pastes into their site) with the Meta Pixel.
-- Component library with built-in empty/error/loading states; calendar-conflict popup component.
+- Component library with built-in empty/error/loading states. No calendar-conflict popup. A
+  conflicting slot is omitted from the booking calendar.
 - Real-time dashboard updates via Supabase subscriptions.
 
 ## API integration points (first-class)
 
-- **Calendar (Google Calendar, Apple Calendar)** — read availability (busy blocks → open slots) and
-  write staff bookings; core MVP integration (Decision #3, #5).
-- **Twilio** — reminders, nudges, review requests, keyword replies + fallback; A2P 10DLC (see SMS
-  strategy).
-- **Stripe Connect / Square** — deposits, packages, subscriptions via a processor abstraction;
-  webhooks for status (Decision #9).
+- **Google Calendar** — full read and write: busy blocks become unavailable slots, and staff
+  bookings are written onto the owner's calendar. Core MVP integration. Apple Calendar is out
+  (Decision #16, #18). A misconfigured owner calendar is the owner's responsibility.
+- **Twilio** — reminders, nudges, review requests, keyword replies + fallback. A2P 10DLC is one
+  brand/campaign registration with a Twilio subaccount per owner (Decision #24). This supersedes
+  the single shared number in Decision #6.
+- **Stripe or Square (owner-connected)** — deposits and packages only, via a processor
+  abstraction that is not finalized until parity is confirmed; webhooks for status (Decision #9,
+  #21). The platform SaaS subscription is billed to the founder separately (Decision #20).
 - **Meta Pixel** — embedded on the booking widget now; **Meta Conversions API deferred** (Decision #12).
 
-## SMS number strategy & A2P 10DLC (needs a CP-M3 decision)
+## SMS number strategy & A2P 10DLC (Decision #24, supersedes #6)
 
-Founder's stated plan (Decision #6): the founder owns A2P 10DLC registration and runs a single
-shared number across all owner accounts; overage beyond the fair-use cap bills automatically.
+The founder is going with Twilio subaccounts: one Twilio brand/campaign registration, with a
+subaccount per owner underneath it. This is the working assumption for architecture, not an open
+risk and not a fallback. The single shared number from Decision #6 is out.
 
-**Risk / open decision.** A single shared number across many unrelated businesses is a known A2P
-10DLC failure mode: carriers/Twilio expect one brand + one campaign per distinct business use case,
-and mixing unrelated businesses behind one sender gets throttled, delisted, or rejected in vetting.
-It also pools deliverability reputation, one bad actor degrades everyone's delivery.
-
-**Recommended path (to decide at CP-M3):** Twilio subaccounts under a shared brand registration with
-per-owner (or pooled, smaller-batch) campaigns, likely via a reseller/ISV program built for
-multi-tenant SMS. Resolve before locking the Twilio design, retrofitting number architecture after
-owners are live is disruptive. The keyword-reply fallback (Decision #8) is part of this same
-decision.
+Overage beyond the fair-use cap still bills automatically. Keyword replies and the unrecognized-reply
+fallback (Decision #8) stay; they are no longer tied to an open number-architecture decision.
 
 ## Technical requirements
 
-1. Booking shows real availability from the owner's calendar and prevents double-booking. Why? A
-   confirmed-but-taken slot destroys trust. (S1, #3) — Frontend, Backend, Calendar
+1. Booking shows real availability from the owner's Google Calendar and prevents double-booking.
+   External conflicts show as unavailable, with no override popup. There is no pre-booking hold.
+   A unique constraint on staff plus time slot rejects a colliding confirm, and both clients are
+   told to try again. The page stays closed until operating hours, booking interval, and each
+   service's duration and settings are set. Why? A confirmed-but-taken slot destroys trust.
+   (S1, #3, #16, #17, #18, #19) — Frontend, Backend, Calendar
 2. The booking flow blocks any self-serve booking less than 24h out. Why? Hard business rule.
    (#7) — Frontend, Backend
 3. The booking widget embeds on any owner site with one snippet and carries the Meta Pixel. Why?
    Owners use different site builders; the widget is the landing page. (S1, #12) — Frontend
 4. Multi-provider scheduling with per-staff hours and configurable buffers. Why? Real shops run
    several providers in parallel. (#4) — Backend, Frontend
-5. Each staff booking writes to that staff's connected calendar; conflicts raise an override/dismiss
-   popup (default favors Studio-side). Why? Keep one source of truth without silent double-books.
-   (#5) — Calendar, Frontend
-6. Payments run through a processor abstraction (Stripe or Square) selected per owner; Payment stores
-   the processor. Why? Owners already use one or the other. (#9) — Backend
+5. Each staff booking writes to that staff's connected Google Calendar. A slot that overlaps an
+   external event is hidden on the client booking page. Why? Keep one source of truth without
+   asking the client or the owner to dismiss a conflict. (#16, #18) — Calendar, Frontend
+6. Client payments run through the owner's Stripe or Square account. The SaaS subscription is a
+   separate bill paid to the founder, always. Do not finalize the processor abstraction until
+   package and refund parity is confirmed. Why? Client money lands with the owner; the platform
+   fee is a different relationship. (#9, #20, #21) — Backend
 7. Deposit/refund/cancellation/cadence/buffer/timezone are owner-configured settings the platform
    enforces; no hardcoded policy. Why? Core differentiator + principle. (#10, #15) — Backend, Frontend
 8. Feature gating is config-driven (plan → features), changeable without a schema migration. Why?
@@ -345,15 +397,23 @@ decision.
    Why? Fire once, on time; nothing silently disappears. (S2, S5, #8) — Job queue, Twilio
 10. SMS consent stored with timestamp + wording and enforced before any send; honor STOP. Why? Legal
     (TCPA / A2P 10DLC). (S4) — Backend, Compliance
-11. Account shutdown enters a clean offboarding state: export window, booking page down, all pending
-    jobs cancelled. Why? No platform liability, no orphaned reminders. (#11) — Backend
+11. Account shutdown enters a clean offboarding state: CSV export (also available anytime before
+    shutdown), booking page down, all pending jobs cancelled. Why? No platform liability, no
+    orphaned reminders. (#11, #28) — Backend
 12. Every view has explicit empty and error states. Why? Blank/broken reads as "it failed." (S3) —
     Frontend
+13. Returning clients match on phone number normalized to E.164, scoped per Account. Why? The same
+    number typed differently must not create a duplicate, and one owner's clients must not match
+    another's. (#23) — Backend
+14. Owner and staff are distinct logins. Owner edits business settings. Staff view calendars and
+    edit bookings only. Enforced in the backend. Why? Hiding a settings link is not a permission.
+    (#22) — Auth, Backend
 
 ## Non-functional requirements
 
 - **Security & tenancy:** auth/authorization, per-account Postgres RLS (policies drafted at CP-M3),
-  secret storage, input validation, expiring tokenized links.
+  secret storage, input validation. Tokenized links exist; whether they expire or can be revoked
+  is undecided (Decision #26).
 - **Compliance:** SMS consent + STOP handling; A2P 10DLC (number/brand/campaign strategy per above).
 - **Performance:** booking page/widget p95 < 2s on mobile; reminder dispatch within 1 min of schedule.
 - **Reliability:** high SMS delivery success; jobs retry with alerting; no orphaned jobs after shutdown.
@@ -363,13 +423,14 @@ decision.
 ## Pricing (business model)
 
 Flat, feature-gated tiers; no per-seat/per-van; texts included (fair-use cap, overage bills
-automatically). Owner connects their own processor. **Tier contents are provisional and gating is
-config-driven; expect boundaries to shift (backlog B1, Decision #2).**
+automatically). The owner connects their own Stripe or Square for client payments. The
+subscription fee is always paid to the founder, separate from that account (Decision #20).
+**Tier contents are provisional and gating is config-driven; expect boundaries to shift (backlog B1, Decision #2).**
 
 | Plan | $/mo flat | Adds (provisional) |
 | --- | --- | --- |
 | Starter | 29 | booking, calendar sync, reminders, reviews, fair-use texts |
-| Pro (hero) | 49 | + rebooking automation, packages, waitlist, session notes, multi-staff |
+| Pro (hero) | 49 | + rebooking automation, packages, session notes, multi-staff |
 | Team | 99 | + more staff/calendars, rewards/discounts, no per-seat trap |
 
 ## What we'll watch (plain terms)
@@ -381,15 +442,21 @@ config-driven; expect boundaries to shift (backlog B1, Decision #2).**
 
 ## Open questions carried into CP-M3
 
-- SMS number / A2P 10DLC strategy (shared number vs subaccounts + per-owner campaigns) and the
-  keyword-reply fallback (Decisions #6, #8).
-- Waitlist entity modeling; rebook-suppression scope; lead conversion events (Decision #14).
+- Tokenized link expiration and manual revocation for session-note share links and review-request
+  links (Decision #26). Deferred.
+- Stripe/Square feature parity for package billing and refunds. Believed equivalent, not verified.
+  Not blocking the initial build (Decision #21).
+- Rebook-suppression scope; lead conversion events (Decision #14). Waitlist modeling is closed:
+  the feature is cut (Decision #25).
+- Keyword-reply fallback copy can still be tuned (Decision #8). The number strategy is closed:
+  Twilio subaccounts (Decision #24).
 - Job queue engine (n8n vs Supabase scheduled functions) and RLS policy design (Decision #14).
 - Product name (Decision #1); final tier split (Decision #2 / B1).
 
 ## Dependent stakeholders
 
-- Google/Apple (calendar API access), Twilio (A2P 10DLC brand/campaign approval), Stripe & Square
+- Google (Calendar API; Apple is out), Twilio (one A2P 10DLC brand/campaign, then per-owner
+  subaccounts), Stripe & Square
   (processor onboarding), Meta (Pixel now; business verification + ad account later), and early
   pilot pros for validation.
 
