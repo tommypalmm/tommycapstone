@@ -9,19 +9,41 @@ rebook. Sold on a flat monthly subscription, acquired through Meta ads.
 business from their phone on texts, phone tag, and a paper book. The customer is the pet pro,
 not the pet owner.
 
-**Live URL.** Not deployed yet (Week 9+).
+**Live URL.** Not deployed yet.
 
 ## How to run it
 
-Docs only until Week 9. No `src/` yet.
+Needs Node 20+. No database or API keys required locally: data lives in an embedded Postgres
+(PGlite) under `.data/`, and texts are simulated (logged on the **Texts** page, not delivered).
 
 ```bash
 git clone https://github.com/tommypalmm/tommycapstone.git
 cd tommycapstone
+npm install
+cp .env.example .env.local   # optional; every setting has a local default
+npm run dev
 ```
 
-Start with [`docs/01-concept-brief.md`](docs/01-concept-brief.md), then the PRD in
-[`docs/02-prd.md`](docs/02-prd.md) (PDF: [`docs/exports/dog-pro-portal-prd.pdf`](docs/exports/dog-pro-portal-prd.pdf)).
+Open http://localhost:3000/signup, then:
+
+1. **Settings** → set hours and a booking interval, then add a service under **Services**. The
+   booking page stays closed until these are set.
+2. Open the booking link from **Settings** in a private window and book as a client.
+3. Back in the app: the booking is on **Today**, and the confirmation text is on **Texts**. Use
+   **Simulate a client reply** there to try `C` (confirm), `X` (cancel), `STOP`, and `START`.
+
+To go live, set these in `.env.local` (see [`.env.example`](.env.example)):
+
+- `DATABASE_URL`: Supabase/Postgres connection string. Tables are created on first start.
+- `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN`: real texts. Each owner's subaccount SID and number go
+  in **Settings → Texting**. Point the number's inbound webhook at `/api/sms/inbound`.
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`: Google Calendar connect under **Settings → Staff**.
+- `JOB_TICKER=off` + `CRON_SECRET`: on serverless hosts, call `/api/cron/tick` every minute instead
+  of the in-process reminder ticker.
+
+Product docs: [`docs/01-concept-brief.md`](docs/01-concept-brief.md), the PRD in
+[`docs/02-prd.md`](docs/02-prd.md) (PDF: [`docs/exports/dog-pro-portal-prd.pdf`](docs/exports/dog-pro-portal-prd.pdf)),
+and build choices in [`docs/decisions/0004-mvp-build-choices.md`](docs/decisions/0004-mvp-build-choices.md).
 
 ## Repo layout
 
@@ -29,6 +51,19 @@ Start with [`docs/01-concept-brief.md`](docs/01-concept-brief.md), then the PRD 
 .
 ├── README.md                 what it is, who it's for, live URL, how to run it
 ├── CLAUDE.md                 standing context for the agent
+├── package.json              Next.js 16 app; `npm run dev` / `npm run build`
+├── .env.example              optional settings (database, Twilio, Google, cron)
+│
+├── src/
+│   ├── app/                  pages and routes
+│   │   ├── app/              owner/staff portal (Today, bookings, clients, texts, settings)
+│   │   ├── book/             public booking page (shared domain, ?b=<business>)
+│   │   ├── c/[token]/        client manage/cancel link from texts
+│   │   ├── n/[token]/        client session-notes link
+│   │   ├── embed.js/         one-snippet website embed
+│   │   └── api/              SMS webhook, cron tick, Google OAuth
+│   ├── lib/                  db, migrations, availability, bookings, jobs, sms, calendar, auth
+│   └── components/           shared UI (empty/error states, hours editor)
 │
 └── docs/
     ├── 01-concept-brief.md   CP-M1 · Sep 9
@@ -55,11 +90,11 @@ Start with [`docs/01-concept-brief.md`](docs/01-concept-brief.md), then the PRD 
     ├── decisions/            why I chose what I chose
     │   ├── 0001-example.md
     │   ├── 0002-cp-m2-founder-decisions.md
-    │   └── 0003-cp-m2-founder-decisions-round-2.md
+    │   ├── 0003-cp-m2-founder-decisions-round-2.md
+    │   └── 0004-mvp-build-choices.md
     │
     └── exports/              PDF exports of docs
         └── dog-pro-portal-prd.pdf
 ```
 
-Coming later: `src/` (the application, Week 9), `tests/` (unit + Playwright, Week 13), and
-`.github/workflows/` (CI/CD, Week 14). Don't add them early.
+Coming later: `tests/` (unit + Playwright, Week 13) and `.github/workflows/` (CI/CD, Week 14).

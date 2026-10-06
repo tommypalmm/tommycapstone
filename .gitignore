@@ -6,3 +6,8 @@ node_modules/
 dist/
 .vercel
 *.log
+.data/
+.next/
+next-env.d.ts
+.claude/settings.local.json
+tsconfig.tsbuildinfo
