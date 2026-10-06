@@ -19,7 +19,7 @@ export function token(bytes = 18): string {
 }
 
 export function appUrl(): string {
-  return (process.env.APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
+  return (process.env.APP_URL ?? "http://localhost:3000").trim().replace(/\/+$/, "");
 }
 
 export function str(v: FormDataEntryValue | null): string {
