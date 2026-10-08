@@ -9,32 +9,53 @@ rebook. Sold on a flat monthly subscription, acquired through Meta ads.
 business from their phone on texts, phone tag, and a paper book. The customer is the pet pro,
 not the pet owner.
 
-**Live URL.** Not deployed yet.
+**Live URL.** https://tommycapstone-livid.vercel.app
 
-## How to run it
+## Running this project
 
-Needs Node 20+. No database or API keys required locally: data lives in an embedded Postgres
-(PGlite) under `.data/`, and texts are simulated (logged on the **Texts** page, not delivered).
+**Stack.** Next.js 16 (App Router, TypeScript) on Vercel, with Supabase Postgres in production.
+Locally it runs on an embedded Postgres (PGlite), so you need no accounts or keys to try it.
+
+**What has to exist on the machine:** Node 20+ (tested on Node 24) and git. Nothing is installed
+system-wide; `npm install` puts everything in `node_modules/`.
 
 ```bash
 git clone https://github.com/tommypalmm/tommycapstone.git
 cd tommycapstone
 npm install
-cp .env.example .env.local   # optional; every setting has a local default
 npm run dev
 ```
 
-Open http://localhost:3000/signup, then:
+Open **http://localhost:3000**. You should see the PetPro OS landing page with **Start free**
+and **Log in**.
 
-1. **Settings** → set hours and a booking interval, then add a service under **Services**. The
+> **Watch out: `.env.local` can point you at the live database.** If `.env.local` sets
+> `DATABASE_URL`, `npm run dev` reads and writes the production Supabase data. To run on the
+> local database instead, blank it for that run:
+>
+> ```bash
+> DATABASE_URL= APP_URL=http://localhost:3000 npm run dev
+> ```
+>
+> Local data then lives in `.data/` (git-ignored). Delete that folder to start fresh.
+
+Try it end to end:
+
+1. Go to http://localhost:3000/signup and create an account.
+2. **Settings** → set hours and a booking interval, then add a service under **Services**. The
    booking page stays closed until these are set.
-2. Open the booking link from **Settings** in a private window and book as a client.
-3. Back in the app: the booking is on **Today**, and the confirmation text is on **Texts**. Use
-   **Simulate a client reply** there to try `C` (confirm), `X` (cancel), `STOP`, and `START`.
+3. Open the booking link from **Settings** in a private window and book as a client.
+4. Back in the app: the booking is on **Today**, and the confirmation text is on **Texts**
+   (texts are simulated locally, not sent). Use **Simulate a client reply** there to try `C`
+   (confirm), `X` (cancel), `STOP`, and `START`.
 
-To go live, set these in `.env.local` (see [`.env.example`](.env.example)):
+Other commands: `npm run typecheck` (TypeScript check), `npm run build` (production build).
 
-- `DATABASE_URL`: Supabase/Postgres connection string. Tables are created on first start.
+To go live, set these in `.env.local` or in Vercel (see [`.env.example`](.env.example)):
+
+- `DATABASE_URL`: Supabase connection string (Transaction pooler, port 6543). Tables are created
+  on first start.
+- `APP_URL`: the public base URL, used in booking links and texts.
 - `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN`: real texts. Each owner's subaccount SID and number go
   in **Settings → Texting**. Point the number's inbound webhook at `/api/sms/inbound`.
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`: Google Calendar connect under **Settings → Staff**.
