@@ -16,6 +16,11 @@ not the pet owner.
 **Stack.** Next.js 16 (App Router, TypeScript) on Vercel, with Supabase Postgres in production.
 Locally it runs on an embedded Postgres (PGlite), so you need no accounts or keys to try it.
 
+**Supabase**
+
+- one shared database for every business (groomers and trainers); each business's data is kept
+  separate by account
+
 **What has to exist on the machine:** Node 20+ (tested on Node 24) and git. Nothing is installed
 system-wide; `npm install` puts everything in `node_modules/`.
 
