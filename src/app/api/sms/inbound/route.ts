@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
   const form = await req.formData();
   const params: Record<string, string> = {};
   form.forEach((v, k) => (params[k] = String(v)));
-  if (!validTwilioSignature(`${appUrl()}/api/sms/inbound`, params, req.headers.get("x-twilio-signature"))) {
+  if (!(await validTwilioSignature(`${appUrl()}/api/sms/inbound`, params, req.headers.get("x-twilio-signature")))) {
     return new Response("invalid signature", { status: 403 });
   }
   await handleInbound(params);

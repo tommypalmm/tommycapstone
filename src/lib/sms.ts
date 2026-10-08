@@ -63,16 +63,45 @@ export async function sendSms({ account, to, body, clientId, jobId }: SendArgs):
   return result;
 }
 
-/** Validates X-Twilio-Signature (HMAC-SHA1 of URL + sorted params). */
-export function validTwilioSignature(url: string, params: Record<string, string>, signature: string | null): boolean {
-  const authToken = process.env.TWILIO_AUTH_TOKEN;
-  if (!authToken) return true; // simulated mode: nothing to validate against
+/**
+ * Validates X-Twilio-Signature (HMAC-SHA1 of URL + sorted params). Twilio signs with the auth token of
+ * the account that owns the number, so a reply to an owner's subaccount number is checked against
+ * that subaccount's token, never the master's (Decision #24).
+ */
+export async function validTwilioSignature(
+  url: string,
+  params: Record<string, string>,
+  signature: string | null,
+): Promise<boolean> {
+  if (!twilioConfigured()) return true; // simulated mode: nothing to validate against
   if (!signature) return false;
+  const authToken = await authTokenFor(params.AccountSid);
+  if (!authToken) return false;
   const data = url + Object.keys(params).sort().map((k) => k + params[k]).join("");
   const expected = createHmac("sha1", authToken).update(data).digest("base64");
   const a = Buffer.from(expected);
   const b = Buffer.from(signature);
   return a.length === b.length && timingSafeEqual(a, b);
+}
+
+const subaccountTokens = new Map<string, string>();
+
+/** The master token, or a known owner subaccount's token (fetched once from Twilio, then cached). */
+async function authTokenFor(accountSid: string | undefined): Promise<string | null> {
+  const master = process.env.TWILIO_ACCOUNT_SID!;
+  if (!accountSid || accountSid === master) return process.env.TWILIO_AUTH_TOKEN!;
+  // Only subaccounts an owner has configured are trusted.
+  if (!(await one("SELECT 1 FROM accounts WHERE twilio_subaccount_sid = $1", [accountSid]))) return null;
+  const cached = subaccountTokens.get(accountSid);
+  if (cached) return cached;
+  const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}.json`, {
+    headers: { Authorization: "Basic " + Buffer.from(`${master}:${process.env.TWILIO_AUTH_TOKEN}`).toString("base64") },
+  });
+  if (!res.ok) return null;
+  const token = ((await res.json()) as { auth_token?: string }).auth_token;
+  if (!token) return null;
+  subaccountTokens.set(accountSid, token);
+  return token;
 }
 
 export async function accountForInbound(toNumber: string, fromE164: string): Promise<Account | null> {
