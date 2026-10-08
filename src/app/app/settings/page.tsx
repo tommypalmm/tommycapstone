@@ -79,6 +79,34 @@ export default async function SettingsPage({ searchParams }: { searchParams: Sea
             <input id="buffer_minutes" name="buffer_minutes" type="number" min={0} max={240} defaultValue={account.buffer_minutes} />
           </div>
         </div>
+        <div className="grid2">
+          <div>
+            <label htmlFor="min_notice_hours">Minimum notice (hours)</label>
+            <input
+              id="min_notice_hours"
+              name="min_notice_hours"
+              type="number"
+              min={24}
+              max={720}
+              defaultValue={account.min_notice_hours}
+              required
+            />
+            <div className="hint">How far ahead clients must book online. At least 24 hours.</div>
+          </div>
+          <div>
+            <label htmlFor="max_advance_days">Book up to (days ahead)</label>
+            <input
+              id="max_advance_days"
+              name="max_advance_days"
+              type="number"
+              min={1}
+              max={365}
+              defaultValue={account.max_advance_days}
+              required
+            />
+            <div className="hint">The furthest out clients can book online.</div>
+          </div>
+        </div>
         <label htmlFor="timezone">Time zone</label>
         <TimeZoneSelect name="timezone" value={account.timezone} />
         <button className="block">Save hours</button>

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Empty, ErrorBox, Flash, param, type SearchParams } from "@/components/ui";
-import { availableSlots, BOOKING_HORIZON_DAYS, goLiveIssues, type Slot } from "@/lib/availability";
+import { availableSlots, goLiveIssues, selfServeWindow, type Slot } from "@/lib/availability";
 import { consentText } from "@/lib/bookings";
 import { CalendarUnavailableError } from "@/lib/calendar";
 import { one, query } from "@/lib/db";
@@ -23,9 +23,10 @@ function Shell({ account, embed, children }: { account: Account; embed: boolean;
   );
 }
 
-async function firstDayWithSlots(account: Account, service: Service, from: string): Promise<string | null> {
+async function firstDayWithSlots(account: Account, service: Service, from: string, last: string): Promise<string | null> {
   for (let i = 0; i < 21; i++) {
     const d = addDaysYmd(from, i);
+    if (d > last) break;
     if ((await availableSlots(account, service, d, { selfServe: true })).length) return d;
   }
   return null;
@@ -173,19 +174,22 @@ export default async function BookPage({ searchParams }: { searchParams: SearchP
   }
 
   // Step 2: time
-  const today = ymdInTz(new Date(), tz);
+  // Only offer days inside the owner's booking window (min notice to max days ahead).
+  const window = selfServeWindow(account);
+  const firstDay = ymdInTz(new Date(window.earliest), tz);
+  const lastDay = ymdInTz(new Date(window.latest), tz);
   let slots: Slot[] = [];
   let calendarError: string | null = null;
-  let day = date && date >= today && date <= addDaysYmd(today, BOOKING_HORIZON_DAYS) ? date : null;
+  let day = date && date >= firstDay && date <= lastDay ? date : null;
   try {
-    day ??= (await firstDayWithSlots(account, service, addDaysYmd(today, 1))) ?? addDaysYmd(today, 1);
+    day ??= (await firstDayWithSlots(account, service, firstDay, lastDay)) ?? firstDay;
     slots = await availableSlots(account, service, day, { selfServe: true });
   } catch (e) {
     if (!(e instanceof CalendarUnavailableError)) throw e;
     calendarError = e.message;
-    day ??= addDaysYmd(today, 1);
+    day ??= firstDay;
   }
-  const days = Array.from({ length: 14 }, (_, i) => addDaysYmd(today, i + 1));
+  const days = Array.from({ length: 14 }, (_, i) => addDaysYmd(firstDay, i)).filter((d) => d <= lastDay);
   if (!days.includes(day)) days.unshift(day);
 
   return (
@@ -210,7 +214,10 @@ export default async function BookPage({ searchParams }: { searchParams: SearchP
       ) : slots.length === 0 ? (
         <div className="card">
           <Empty title="No open times this day.">
-            <p>Try another day. Online bookings need at least 24 hours&apos; notice.</p>
+            <p>
+              Try another day. Online bookings need at least {account.min_notice_hours} hours&apos; notice and open up to{" "}
+              {account.max_advance_days} days ahead.
+            </p>
           </Empty>
         </div>
       ) : (

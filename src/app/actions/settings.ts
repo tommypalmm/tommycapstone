@@ -30,12 +30,20 @@ export async function saveEssentials(form: FormData) {
   const interval = intOrNull(form.get("booking_interval_min"));
   const buffer = intOrNull(form.get("buffer_minutes")) ?? 0;
   const timezone = str(form.get("timezone"));
+  const minNotice = intOrNull(form.get("min_notice_hours"));
+  const maxAdvance = intOrNull(form.get("max_advance_days"));
   if (!interval || interval < 5 || interval > 480) fail(SETTINGS, "Booking interval must be between 5 and 480 minutes.");
   if (buffer < 0 || buffer > 240) fail(SETTINGS, "Buffer must be between 0 and 240 minutes.");
   if (!isValidTimeZone(timezone)) fail(SETTINGS, "Please pick a valid time zone.");
+  // Decision #7: online bookings always need at least 24 hours' notice.
+  if (minNotice === null || minNotice < 24 || minNotice > 720) fail(SETTINGS, "Minimum notice must be between 24 and 720 hours.");
+  if (maxAdvance === null || maxAdvance < 1 || maxAdvance > 365) fail(SETTINGS, "Book up to must be between 1 and 365 days.");
+  if (minNotice >= maxAdvance * 24) fail(SETTINGS, "Book up to must be further out than the minimum notice.");
   await query(
-    "UPDATE accounts SET operating_hours = $1, booking_interval_min = $2, buffer_minutes = $3, timezone = $4 WHERE id = $5",
-    [JSON.stringify(hours), interval, buffer, timezone, account.id],
+    `UPDATE accounts SET operating_hours = $1, booking_interval_min = $2, buffer_minutes = $3, timezone = $4,
+       min_notice_hours = $5, max_advance_days = $6
+     WHERE id = $7`,
+    [JSON.stringify(hours), interval, buffer, timezone, minNotice, maxAdvance, account.id],
   );
   done(SETTINGS, "Hours and scheduling saved.");
 }

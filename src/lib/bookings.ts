@@ -1,4 +1,4 @@
-import { freeStaffAt, goLiveIssues, SELF_SERVE_MIN_LEAD_MS, staffIsFree } from "./availability";
+import { freeStaffAt, goLiveIssues, selfServeWindow, staffIsFree } from "./availability";
 import { createCalendarEvent, deleteCalendarEvent } from "./calendar";
 import { isUniqueViolation, one, query, tx } from "./db";
 import { token } from "./format";
@@ -56,8 +56,20 @@ export async function createBooking(a: CreateArgs): Promise<CreateResult> {
   if (!phone) return { ok: false, error: "Please enter a valid mobile number, like (315) 555-0100." };
   if (!dogName) return { ok: false, error: "Please enter your dog's name." };
   if (Number.isNaN(a.start.getTime())) return { ok: false, error: "Please pick a time." };
-  if (a.selfServe && a.start.getTime() < Date.now() + SELF_SERVE_MIN_LEAD_MS) {
-    return { ok: false, error: "Online bookings must be at least 24 hours in advance. Please pick a later time." };
+  if (a.selfServe) {
+    const { earliest, latest } = selfServeWindow(account);
+    if (a.start.getTime() < earliest) {
+      return {
+        ok: false,
+        error: `Online bookings need at least ${account.min_notice_hours} hours' notice. Please pick a later time.`,
+      };
+    }
+    if (a.start.getTime() > latest) {
+      return {
+        ok: false,
+        error: `Online bookings open up to ${account.max_advance_days} days ahead. Please pick an earlier time.`,
+      };
+    }
   }
   if (!a.selfServe && a.start.getTime() < Date.now() - 3600_000) {
     return { ok: false, error: "That time is in the past." };

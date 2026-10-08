@@ -176,4 +176,13 @@ CREATE TABLE sms_log (
 CREATE INDEX sms_log_account ON sms_log (account_id, created_at DESC);
 `,
   },
+  {
+    id: "0002_booking_window",
+    sql: `
+-- Owner-set self-serve booking window. The minimum can be raised but never below 24h (Decision #7).
+ALTER TABLE accounts
+  ADD COLUMN min_notice_hours int NOT NULL DEFAULT 24 CHECK (min_notice_hours >= 24),
+  ADD COLUMN max_advance_days int NOT NULL DEFAULT 60 CHECK (max_advance_days BETWEEN 1 AND 365);
+`,
+  },
 ];

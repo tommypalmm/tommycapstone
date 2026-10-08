@@ -3,8 +3,13 @@ import { googleBusy, type Interval } from "./calendar";
 import { addDaysYmd, weekdayOfYmd, ymdInTz, zonedToUtc, type WeeklyHours } from "./time";
 import type { Account, Service, Staff } from "./types";
 
-export const SELF_SERVE_MIN_LEAD_MS = 24 * 3600_000; // Decision #7: no self-serve bookings < 24h out
-export const BOOKING_HORIZON_DAYS = 60;
+const MIN_NOTICE_FLOOR_HOURS = 24; // Decision #7: no self-serve bookings < 24h out, whatever the owner sets
+
+/** Earliest and latest start times a client may book online, from the owner's booking window. */
+export function selfServeWindow(account: Account, now = Date.now()): { earliest: number; latest: number } {
+  const noticeHours = Math.max(MIN_NOTICE_FLOOR_HOURS, account.min_notice_hours ?? MIN_NOTICE_FLOOR_HOURS);
+  return { earliest: now + noticeHours * 3600_000, latest: now + (account.max_advance_days ?? 60) * 86400_000 };
+}
 
 /** What's still missing before the booking page may accept bookings (Decision #17). */
 export function goLiveIssues(account: Account, services: Service[]): string[] {
@@ -82,7 +87,7 @@ export async function availableSlots(
   const interval = account.booking_interval_min;
   if (!interval || interval <= 0) return [];
   const ctx = await loadDay(account, ymd, opts.staffId);
-  const earliest = Date.now() + (opts.selfServe ? SELF_SERVE_MIN_LEAD_MS : 0);
+  const { earliest, latest } = opts.selfServe ? selfServeWindow(account) : { earliest: Date.now(), latest: Infinity };
   const weekday = String(weekdayOfYmd(ymd));
   const durationMs = service.duration_min * 60_000;
   const byStart = new Map<number, string[]>();
@@ -93,7 +98,7 @@ export async function availableSlots(
     const open = zonedToUtc(ymd, window[0], account.timezone).getTime();
     const close = zonedToUtc(ymd, window[1], account.timezone).getTime();
     for (let t = open; t + durationMs <= close; t += interval * 60_000) {
-      if (t < earliest) continue;
+      if (t < earliest || t > latest) continue;
       if (!staffFree(ctx, s, account, { start: t, end: t + durationMs })) continue;
       byStart.set(t, [...(byStart.get(t) ?? []), s.id]);
     }

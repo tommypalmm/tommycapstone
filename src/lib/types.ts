@@ -14,6 +14,8 @@ export interface Account {
   operating_hours: WeeklyHours | null;
   buffer_minutes: number;
   cancel_cutoff_hours: number;
+  min_notice_hours: number;
+  max_advance_days: number;
   deposit_policy: string | null;
   refund_policy: string | null;
   cancellation_policy: string | null;
