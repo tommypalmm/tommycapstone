@@ -3,7 +3,7 @@
 **Milestone.** CP-M2 · Sep 27
 **Status.** Draft
 **Author.** Tommy Brown
-**Working title.** Studio OS (placeholder, rename later, per Decision #1, does not block build).
+**Product name.** PetProOS (Decision #1, settled in [`0005`](decisions/0005-founder-decisions-round-3.md)).
 **Input.** [`01-concept-brief.md`](01-concept-brief.md), [`backlog.md`](backlog.md),
 [`decisions/0002-cp-m2-founder-decisions.md`](decisions/0002-cp-m2-founder-decisions.md),
 [`decisions/0003-cp-m2-founder-decisions-round-2.md`](decisions/0003-cp-m2-founder-decisions-round-2.md),
@@ -11,7 +11,7 @@
 
 ## Overview
 
-Studio OS is a web application and central portal that runs the business side of an independent dog
+PetProOS is a web application and central portal that runs the business side of an independent dog
 trainer's or groomer's day. Clients book online through a page the owner can embed on their own
 website or share as a link, availability comes from the owner's Google Calendar, automated texts cut
 no-shows, and past clients are nudged to rebook on their grooming cycle or through a training
@@ -19,7 +19,7 @@ package. It is sold to the owner-operator on a flat monthly subscription and is 
 acquired at scale through Meta ads, which are a later upsell.
 
 The wedge is that most of these owners have almost no digital infrastructure. They run on
-back-and-forth texts, phone tag, and a paper book. Studio OS removes that communication work
+back-and-forth texts, phone tag, and a paper book. PetProOS removes that communication work
 instead of making them learn yet another app.
 
 Every requirement traces to a backlog story (S1–S10 in [`backlog.md`](backlog.md)); founder
@@ -30,7 +30,7 @@ subaccounts, and a separate founder-paid SaaS bill.
 
 ## Design principle (platform-wide)
 
-**The platform provides the infrastructure; the owner configures the business logic.** Studio OS
+**The platform provides the infrastructure; the owner configures the business logic.** PetProOS
 supplies the foundation (scheduling, reminders, payments, records) and exposes every
 business-specific behavior, time zone, cancellation rules, deposit/refund policy, rebooking
 cadence, buffer time, as an owner-configurable setting. The platform then operates according to
@@ -159,7 +159,7 @@ Not the buyer, but their experience drives the owner's willingness to pay.
    states, plus a running tally of money saved from prevented no-shows and auto-rebookings.
 8. **SMS consent capture (S4)** — explicit, timestamped opt-in; no consent, no texts; honors STOP.
 9. **Auto-rebooking on cadence (S5)** — per-service rebook cycle; one nudge with a link; suppressed
-   if a future appointment exists (exact suppression scope is an open CP-M3 question, see below).
+   if the client has any future appointment, with any service (settled in 0005 §31).
 10. **Automated review requests (S6)** — one post-visit review request by SMS with a direct link.
     The platform marks the request **sent**; it does not verify a review was actually posted
     (Decision #13).
@@ -188,7 +188,7 @@ moot.
 ## What makes it hard to say no to
 
 - **Run your business your way.** Every policy, deposit, refund, cancellation, cadence, is the
-  owner's setting. Studio OS gives them the infrastructure without forcing them to change how their
+  owner's setting. PetProOS gives them the infrastructure without forcing them to change how their
   business already runs (Decision #10, #15). This is the core positioning.
 - **Done-for-you setup for non-techy owners.** Import contacts and connect (or create) a Google
   Calendar. Going live only requires operating hours, a booking interval, and each service's
@@ -307,8 +307,7 @@ Core entities:
   fired_at. Pixel fires client-side now; server-side CAPI events are later (Decision #12).
 
 **Open modeling questions for CP-M3 (Decision #14)**
-- **Rebook suppression scope:** suppress on any future appointment for the client, or only the same
-  client + same service? Needs a founder call (grooming vs training behave differently).
+- **Rebook suppression scope:** settled. Suppress on any future appointment for the client (0005 §31).
 - **Lead conversion events:** should a Lead that never books still fire a top-of-funnel Meta signal?
   Revisit when CAPI work starts.
 
@@ -320,7 +319,9 @@ Core entities:
 
 ## Backend
 
-- Supabase (Postgres, Auth, Storage) with per-account row-level security (policies designed at CP-M3).
+- Supabase Postgres with per-account row-level security (policies designed at CP-M3). Logins are the
+  app's own email and password sessions plus Sign in with Google and password reset, not Supabase
+  Auth (0005 §30).
 - **Service-layer abstractions** so vendors are swappable: a `PaymentProcessor` interface (Stripe,
   Square) and Google Calendar, plus Twilio. SMS is one brand/campaign with a subaccount per
   owner (Decision #24). Do not finalize the Stripe/Square abstraction until package billing and
@@ -441,10 +442,10 @@ subscription fee is always paid to the founder, separate from that account (Deci
   links (Decision #26). Deferred.
 - Stripe/Square feature parity for package billing and refunds. Believed equivalent, not verified.
   Not blocking the initial build (Decision #21).
-- Rebook-suppression scope; lead conversion events (Decision #14).
+- Lead conversion events (Decision #14).
 - Keyword-reply fallback copy can still be tuned (Decision #8).
 - Job queue engine (n8n vs Supabase scheduled functions) and RLS policy design (Decision #14).
-- Product name (Decision #1); final tier split (Decision #2 / B1).
+- Final tier split (Decision #2 / B1).
 
 ## Dependent stakeholders
 
