@@ -6,6 +6,8 @@ import { normalizePhone } from "./phone";
 import { hasFeature } from "./plans";
 import { sendSms } from "./sms";
 import { formatDateTime, ymdInTz } from "./time";
+import { jobsRunHere, runDueJobs } from "./jobs";
+import { after } from "next/server";
 import type { Account, Booking, Service, Staff } from "./types";
 
 export function consentText(businessName: string): string {
@@ -37,6 +39,32 @@ interface CreateArgs {
 }
 
 export type CreateResult = { ok: true; booking: Booking } | { ok: false; error: string; taken?: boolean };
+
+const COLLISION_WINDOW_MS = 1500;
+const COLLISION_MSG = "Someone else tried to book this exact time at the same moment. Please pick a time and try again.";
+
+/**
+ * Decision #19: two confirms of the same staff + slot that arrive together are both rejected, and both
+ * clients are told to try again. Each confirm records an attempt, waits out the window, then looks for
+ * another attempt within the window on either side. Both sides see each other, so neither books.
+ * Confirms further apart than the window fall through to the unique index: first one wins.
+ */
+async function collidingConfirm(staffId: string, start: Date): Promise<boolean> {
+  await query("DELETE FROM slot_attempts WHERE created_at < now() - interval '10 minutes'");
+  const [mine] = await query<{ id: string; created_at: Date }>(
+    "INSERT INTO slot_attempts (staff_id, start_time) VALUES ($1, $2) RETURNING id, created_at",
+    [staffId, start],
+  );
+  await new Promise((r) => setTimeout(r, COLLISION_WINDOW_MS));
+  const other = await one(
+    `SELECT 1 FROM slot_attempts
+     WHERE staff_id = $1 AND start_time = $2 AND id <> $3
+       AND created_at BETWEEN $4::timestamptz - $5 * interval '1 millisecond' AND $4::timestamptz + $5 * interval '1 millisecond'
+     LIMIT 1`,
+    [staffId, start, mine.id, mine.created_at, COLLISION_WINDOW_MS],
+  );
+  return Boolean(other);
+}
 
 export async function createBooking(a: CreateArgs): Promise<CreateResult> {
   const { account, service } = a;
@@ -94,6 +122,9 @@ export async function createBooking(a: CreateArgs): Promise<CreateResult> {
     else if (staff) return { ok: false, error: `${staff.name} already has something at that time.`, taken: true };
   }
   if (!staffId) return { ok: false, error: SLOT_TAKEN_MSG, taken: true };
+  if (a.selfServe && (await collidingConfirm(staffId, a.start))) {
+    return { ok: false, error: COLLISION_MSG, taken: true };
+  }
 
   const consentAt = a.consent ? new Date() : null;
   try {
@@ -156,9 +187,11 @@ export async function createBooking(a: CreateArgs): Promise<CreateResult> {
       bookingId: booking.id,
     });
     if (eventId) await query("UPDATE bookings SET external_event_id = $1 WHERE id = $2", [eventId, booking.id]);
+    // Send the confirmation now instead of waiting for the next cron tick.
+    if (jobsRunHere()) after(() => runDueJobs().catch((e) => console.error("[jobs] immediate run failed:", e)));
     return { ok: true, booking };
   } catch (e) {
-    // Decision #19: no hold step. The unique (staff, start) index rejects the colliding write.
+    // Decision #19: no hold step. The unique (staff, start) index rejects a later write to a booked slot.
     if (isUniqueViolation(e)) return { ok: false, error: SLOT_TAKEN_MSG, taken: true };
     throw e;
   }

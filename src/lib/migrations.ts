@@ -185,4 +185,18 @@ ALTER TABLE accounts
   ADD COLUMN max_advance_days int NOT NULL DEFAULT 60 CHECK (max_advance_days BETWEEN 1 AND 365);
 `,
   },
+  {
+    id: "0003_slot_attempts",
+    sql: `
+-- Decision #19: confirms of the same staff + slot that arrive together are all rejected.
+-- Each self-serve confirm records an attempt here first, then checks for overlapping attempts.
+CREATE TABLE slot_attempts (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  staff_id uuid NOT NULL REFERENCES staff(id) ON DELETE CASCADE,
+  start_time timestamptz NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT clock_timestamp()
+);
+CREATE INDEX slot_attempts_slot ON slot_attempts (staff_id, start_time);
+`,
+  },
 ];

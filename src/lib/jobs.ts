@@ -114,10 +114,20 @@ async function handle(job: JobRow): Promise<Outcome> {
   return job.attempts >= MAX_ATTEMPTS ? { status: "failed", reason: res.error! } : { status: "retry", reason: res.error! };
 }
 
+/**
+ * Whether this process may send scheduled texts. A laptop running `npm run dev` against the
+ * production database must not: it would claim real jobs and only simulate the sends.
+ * Allowed on Vercel, on the local embedded database, or when JOB_TICKER=on is set explicitly.
+ */
+export function jobsRunHere(): boolean {
+  if (process.env.JOB_TICKER === "on") return true;
+  return Boolean(process.env.VERCEL) || !process.env.DATABASE_URL;
+}
+
 let running = false;
 
 export async function runDueJobs(): Promise<{ processed: number }> {
-  if (running) return { processed: 0 };
+  if (running || !jobsRunHere()) return { processed: 0 };
   running = true;
   try {
     // Release jobs stuck in "running" (e.g. the process died mid-send).

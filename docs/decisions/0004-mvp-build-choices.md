@@ -20,7 +20,7 @@ These are the calls made during the build where the PRD was open, silent, or cou
 
 ## 31. Job queue engine
 
-**Built.** A Postgres `jobs` table, one row per confirmation, reminder, rebook nudge, review request, or notes link. A unique key on booking + kind makes each job idempotent, and `FOR UPDATE SKIP LOCKED` claims a job before it runs. An in-process ticker runs every 30 seconds. On serverless hosts, set `JOB_TICKER=off` and call `/api/cron/tick` every minute. Failed sends retry 3 times, then show as alerts on the dashboard.
+**Built.** A Postgres `jobs` table, one row per confirmation, reminder, rebook nudge, review request, or notes link. A unique key on booking + kind makes each job idempotent, and `FOR UPDATE SKIP LOCKED` claims a job before it runs. On Vercel, cron-job.org calls `/api/cron/tick` every minute. A new booking also runs the queue right away (Next.js `after()`), so the confirmation text goes out about 3 seconds after booking instead of up to a minute later. An in-process ticker every 30 seconds starts on its own only with the local embedded database, or with `JOB_TICKER=on`. A laptop running `npm run dev` against the production database never claims real jobs; before this rule it could take a real reminder and only simulate the send. Failed sends retry 3 times, then show as alerts on the dashboard.
 
 **Why.** It meets "dispatch within 1 minute" with no extra service. This provisionally answers n8n vs Supabase scheduled functions (Decision #14).
 
@@ -28,9 +28,11 @@ These are the calls made during the build where the PRD was open, silent, or cou
 
 **PRD.** Decision #19 says to reject both colliding confirms and tell both clients to try again.
 
-**Built.** A partial unique index on `(staff_id, start_time)` for non-cancelled bookings. The first write commits and that client is booked. Every later write fails, and that client sees "that time was just taken, please pick another time and try again." A test of 6 simultaneous confirms produced 1 booking and 5 retry messages.
+**Built, per the founder's decision (October 8, 2026): reject both.** Before writing, each online confirm records an attempt in `slot_attempts` and waits 1.5 seconds. If another attempt for the same staff and start time landed within 1.5 seconds either way, the confirm is rejected. Each colliding client sees "Someone else tried to book this exact time at the same moment. Please pick a time and try again." Nobody is booked, and nobody is told they're booked and then cancelled. Confirms more than 1.5 seconds apart aren't simultaneous: the partial unique index on `(staff_id, start_time)` lets the first one win, and the later one sees "that time was just taken."
 
-**Why.** By the time the second write fails, the first is already committed and confirmed. Rejecting it too would mean cancelling a booking the client was already told about, which is the trust problem the rule exists to prevent. Needs founder sign-off.
+**Tested.** 6 simultaneous confirms: 0 bookings, 6 try-again messages. 2 confirms 3 seconds apart: 1 booking, 1 "just taken". A single confirm: booked.
+
+**Cost.** Every online confirm takes about 1.5 seconds longer. Bookings that the owner or staff enter skip the check; the unique index still blocks double booking.
 
 ## 33. SMS reply keywords
 
